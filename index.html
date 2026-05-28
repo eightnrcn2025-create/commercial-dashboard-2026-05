@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>g654321 商业化指标看板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2c3e50; }
+.header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 24px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.header h1 { font-size: 22px; font-weight: 600; }
+.header .meta { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+.tabs { background: white; padding: 0 32px; border-bottom: 1px solid #e1e4e8; display: flex; gap: 4px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.tab { padding: 14px 20px; cursor: pointer; font-size: 14px; color: #586069; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none; }
+.tab:hover { color: #2a5298; background: #f6f8fa; }
+.tab.active { color: #2a5298; border-bottom-color: #2a5298; font-weight: 600; background: #f6f8fa; }
+.container { padding: 24px 32px; max-width: 1600px; margin: 0 auto; }
+.panel { display: none; }
+.panel.active { display: block; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid #2a5298; }
+.kpi-card .label { font-size: 13px; color: #6a737d; margin-bottom: 8px; }
+.kpi-card .value { font-size: 28px; font-weight: 700; color: #24292e; line-height: 1.2; }
+.kpi-card .sub { font-size: 12px; color: #959da5; margin-top: 4px; }
+.kpi-card.accent-red { border-left-color: #d73a49; }
+.kpi-card.accent-green { border-left-color: #28a745; }
+.kpi-card.accent-orange { border-left-color: #f66a0a; }
+.chart-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; }
+.chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #24292e; display: flex; align-items: center; justify-content: space-between; }
+.chart-card .note { font-size: 11px; color: #959da5; font-weight: normal; }
+.chart { width: 100%; height: 400px; }
+.chart-tall { height: 540px; }
+.row { display: grid; gap: 16px; margin-bottom: 16px; }
+.row.cols-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 1000px) { .row.cols-2 { grid-template-columns: 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #eaecef; }
+th:first-child, td:first-child { text-align: left; }
+th { background: #f6f8fa; color: #586069; font-weight: 600; font-size: 12px; cursor: pointer; user-select: none; position: relative; }
+th:hover { background: #ebeef1; }
+th.sortable::after { content: ' ⇅'; opacity: 0.4; font-size: 10px; }
+th.sort-asc::after { content: ' ↑'; opacity: 1; color: #2a5298; }
+th.sort-desc::after { content: ' ↓'; opacity: 1; color: #2a5298; }
+tr:hover { background: #f6f8fa; }
+.table-wrap { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.warn { background: #fff5e6; border-left: 3px solid #f66a0a; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #80520d; margin-bottom: 16px; }
+.legend-toggle { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.legend-toggle label { font-size: 12px; cursor: pointer; padding: 4px 10px; background: #f6f8fa; border-radius: 4px; user-select: none; }
+.legend-toggle input { margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 g654321 商业化指标看板</h1>
+  <div class="meta">数据快照：2026-05-28 18:00 · 趋势数据：2026-04-28 ~ 2026-05-27 · 数据源：admin1866 后台</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview">总览</div>
+  <div class="tab" data-tab="trend">30天趋势</div>
+  <div class="tab" data-tab="wangyou">网游</div>
+  <div class="tab" data-tab="danji">单机</div>
+  <div class="tab" data-tab="taocan">套餐</div>
+  <div class="tab" data-tab="channel">渠道</div>
+  <div class="tab" data-tab="ltvret">LTV / 留存</div>
+</div>
+
+<div class="container">
+
+  <!-- 总览 -->
+  <div class="panel active" id="panel-overview">
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="label">总注册用户数</div><div class="value">5,612,182</div><div class="sub">累计</div></div>
+      <div class="kpi-card accent-orange"><div class="label">总付费用户数</div><div class="value">80,375</div><div class="sub">付费渗透率 1.43%</div></div>
+      <div class="kpi-card accent-green"><div class="label">总充值（元）</div><div class="value">7,528,032</div><div class="sub">总订单 301,697 / 有效 148,659</div></div>
+      <div class="kpi-card"><div class="label">总充值 G 点</div><div class="value">82,377,968</div><div class="sub">含赠送 2,584,663</div></div>
+      <div class="kpi-card accent-orange"><div class="label">总消费 G 点</div><div class="value">75,646,113</div><div class="sub">充消比 ≈ 109%</div></div>
+      <div class="kpi-card accent-green"><div class="label">G 点结余</div><div class="value">9,316,518</div><div class="sub">活跃+流失用户合计</div></div>
+      <div class="kpi-card"><div class="label">游戏总下载量</div><div class="value">4,252,320</div><div class="sub">单机累计下载</div></div>
+      <div class="kpi-card accent-red"><div class="label">客单价</div><div class="value">50.64</div><div class="sub">元 / 单（累计均值）</div></div>
+    </div>
+
+    <h3 style="margin: 24px 0 12px 4px; color: #24292e; font-size: 16px;">昨日 vs 近 7 天 vs 近 30 天</h3>
+    <div class="chart-card">
+      <div id="chart-overview-compare" class="chart" style="height:340px"></div>
+    </div>
+
+    <div class="row cols-2">
+      <div class="chart-card">
+        <h3>新 vs 留存付费金额占比 <span class="note">近 30 天</span></h3>
+        <div id="chart-overview-pie" class="chart" style="height:300px"></div>
+      </div>
+      <div class="chart-card">
+        <h3>每日订单成功率 <span class="note">有效订单 / 总下单</span></h3>
+        <div id="chart-overview-success" class="chart" style="height:300px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 30天趋势 -->
+  <div class="panel" id="panel-trend">
+    <div class="chart-card">
+      <h3>核心指标 30 天趋势 <span class="note">点击图例可切换显示</span></h3>
+      <div id="chart-trend-main" class="chart chart-tall"></div>
+    </div>
+    <div class="chart-card">
+      <h3>日明细表 <span class="note">点列头可排序</span></h3>
+      <div class="table-wrap"><table id="table-trend"></table></div>
+    </div>
+  </div>
+
+  <!-- 网游 -->
+  <div class="panel" id="panel-wangyou">
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="label">网游注册（48 款里 23 款有活跃）</div><div class="value" id="wy-kpi-reg"></div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card accent-green"><div class="label">网游总充值（元）</div><div class="value" id="wy-kpi-rev"></div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card accent-orange"><div class="label">网游总消费 G 点</div><div class="value" id="wy-kpi-cost"></div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card"><div class="label">充值用户数</div><div class="value" id="wy-kpi-payer"></div><div class="sub">近 7 天</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>网游充值金额排行 <span class="note">近 7 天 · 点条形可看明细</span></h3>
+      <div id="chart-wangyou" class="chart chart-tall"></div>
+    </div>
+    <div class="chart-card">
+      <h3>网游明细表（含派生 ARPU/ARPPU/付费率）</h3>
+      <div class="table-wrap"><table id="table-wangyou"></table></div>
+    </div>
+  </div>
+
+  <!-- 单机 -->
+  <div class="panel" id="panel-danji">
+    <div class="warn">⚠️ 单机的"充值金额"全 0，销售衡量用"消费 G 点"（用户用既有 G 点购买/下载单机）</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="label">单机有活跃游戏数</div><div class="value">176</div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card accent-orange"><div class="label">单机消费 G 点 TOP20 合计</div><div class="value" id="dj-kpi-cost"></div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card accent-green"><div class="label">单机下载量 TOP20 合计</div><div class="value" id="dj-kpi-dl"></div><div class="sub">近 7 天</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>单机消费 G 点 TOP 20 <span class="note">近 7 天</span></h3>
+      <div id="chart-danji" class="chart chart-tall"></div>
+    </div>
+    <div class="chart-card">
+      <h3>单机明细表 <span class="note">点列头可排序</span></h3>
+      <div class="table-wrap"><table id="table-danji"></table></div>
+    </div>
+  </div>
+
+  <!-- 套餐 -->
+  <div class="panel" id="panel-taocan">
+    <div class="row cols-2">
+      <div class="chart-card">
+        <h3>套餐实际收入 <span class="note">近 7 天 · 分金币/会员</span></h3>
+        <div id="chart-taocan-rev" class="chart" style="height:380px"></div>
+      </div>
+      <div class="chart-card">
+        <h3>套餐支付成功率 <span class="note">成功次数 / 下单次数</span></h3>
+        <div id="chart-taocan-conv" class="chart" style="height:380px"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>套餐明细表</h3>
+      <div class="table-wrap"><table id="table-taocan"></table></div>
+    </div>
+  </div>
+
+  <!-- 渠道 -->
+  <div class="panel" id="panel-channel">
+    <div class="warn">official 渠道一家独大（占 76% 充值），其他渠道虽小但 ARPU 不一定差 — 看明细表的 ARPU 列</div>
+    <div class="chart-card">
+      <h3>渠道充值金额排行 <span class="note">近 7 天 · TOP 19 有营收</span></h3>
+      <div id="chart-channel" class="chart chart-tall"></div>
+    </div>
+    <div class="chart-card">
+      <h3>渠道明细表</h3>
+      <div class="table-wrap"><table id="table-channel"></table></div>
+    </div>
+  </div>
+
+  <!-- LTV / 留存 -->
+  <div class="panel" id="panel-ltvret">
+    <div class="warn">⚠️ 当前 LTV / 留存均聚合自"网络游戏注册留存"和"LTV 表"，仅含网游用户。真·平台口径需技术修「日活统计」bug 后才能取</div>
+    <div class="chart-card">
+      <h3>平台 LTV 趋势 <span class="note">按注册日聚合 · D1 / D7 / D14 / D30</span></h3>
+      <div id="chart-ltv" class="chart" style="height:380px"></div>
+    </div>
+    <div class="chart-card">
+      <h3>平台留存率趋势 <span class="note">按注册日聚合 · D1 / D3 / D7 / D14 / D30 (%)</span></h3>
+      <div id="chart-retention" class="chart" style="height:380px"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
