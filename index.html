@@ -48,6 +48,19 @@ tr:hover { background: #f6f8fa; }
 .legend-toggle { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .legend-toggle label { font-size: 12px; cursor: pointer; padding: 4px 10px; background: #f6f8fa; border-radius: 4px; user-select: none; }
 .legend-toggle input { margin-right: 4px; }
+.date-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.date-bar label { font-size: 13px; color: #586069; font-weight: 600; }
+.date-bar input[type="date"] { font-size: 14px; padding: 6px 10px; border: 1px solid #d1d5da; border-radius: 4px; font-family: inherit; }
+.date-bar button { font-size: 12px; padding: 6px 14px; border: 1px solid #d1d5da; background: #f6f8fa; border-radius: 4px; cursor: pointer; color: #24292e; }
+.date-bar button:hover { background: #e1e4e8; }
+.date-bar button.active { background: #2a5298; color: white; border-color: #2a5298; }
+.delta-up { color: #28a745; font-weight: 600; }
+.delta-down { color: #d73a49; font-weight: 600; }
+.delta-neutral { color: #6a737d; }
+.day-card { background: white; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-top: 3px solid #2a5298; }
+.day-card .label { font-size: 12px; color: #6a737d; }
+.day-card .value { font-size: 22px; font-weight: 700; color: #24292e; margin-top: 4px; }
+.day-card .delta { font-size: 11px; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -71,6 +84,21 @@ tr:hover { background: #f6f8fa; }
 
   <!-- 总览 -->
   <div class="panel active" id="panel-overview">
+
+    <div class="date-bar">
+      <label>📅 选择日期：</label>
+      <input type="date" id="date-picker" min="2026-04-28" max="2026-05-27" value="2026-05-27">
+      <button data-shift="0" class="active">最新日</button>
+      <button data-shift="-1">前一天</button>
+      <button data-shift="-7">7 天前</button>
+      <button data-shift="-30">30 天前</button>
+      <span style="margin-left: auto; color: #6a737d; font-size: 12px;">→ 下方"选定日 KPI"会随日期变化</span>
+    </div>
+
+    <h3 style="margin: 8px 0 12px 4px; color: #24292e; font-size: 16px;">选定日 KPI <span style="font-weight: normal; color: #959da5; font-size: 13px;" id="day-title">2026-05-27 vs 前一天</span></h3>
+    <div class="kpi-grid" id="day-kpi-grid"></div>
+
+    <h3 style="margin: 24px 0 12px 4px; color: #24292e; font-size: 16px;">累计大盘</h3>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="label">总注册用户数</div><div class="value">5,612,182</div><div class="sub">累计</div></div>
       <div class="kpi-card accent-orange"><div class="label">总付费用户数</div><div class="value">80,375</div><div class="sub">付费渗透率 1.43%</div></div>

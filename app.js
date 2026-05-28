@@ -55,6 +55,82 @@ function sortTable(el, col, formats) {
   rows.forEach(r => tbody.appendChild(r));
 }
 
+// ============== 日期选择器 + 选定日 KPI ==============
+const DAILY_BY_DATE = {};
+DAILY.forEach(r => { DAILY_BY_DATE[r[0]] = r; });
+const DATE_MAX = DAILY[0][0];  // 最新日 2026-05-27
+const DATE_MIN = DAILY[DAILY.length - 1][0];  // 最早 2026-04-28
+
+const DAY_KPI_DEFS = [
+  {key: '日活', idx: 1, type: 'num'},
+  {key: '注册', idx: 2, type: 'num'},
+  {key: '下载', idx: 3, type: 'num'},
+  {key: '充值（元）', idx: 4, type: 'num'},
+  {key: '消费G点', idx: 6, type: 'num'},
+  {key: '注册付费人数', idx: 7, type: 'num'},
+  {key: '注册付费金额', idx: 8, type: 'num'},
+  {key: '留存付费人数', idx: 9, type: 'num'},
+  {key: '留存付费金额', idx: 10, type: 'num'},
+  {key: '总下单数', idx: 11, type: 'num'},
+  {key: '有效订单数', idx: 12, type: 'num'},
+  {key: '客单价', idx: -1, type: 'calc', fn: r => r[11] > 0 ? r[4] / r[11] : 0}
+];
+
+function shiftDate(dStr, days) {
+  const d = new Date(dStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function deltaSpan(curr, prev) {
+  if (prev == null || prev === 0) return '<span class="delta delta-neutral">前日无数据</span>';
+  const pct = (curr - prev) / prev * 100;
+  const cls = pct > 0 ? 'delta-up' : (pct < 0 ? 'delta-down' : 'delta-neutral');
+  const arrow = pct > 0 ? '↑' : (pct < 0 ? '↓' : '─');
+  return `<span class="delta ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% vs 前日</span>`;
+}
+
+function renderDayKPI(dateStr) {
+  const row = DAILY_BY_DATE[dateStr];
+  const prevStr = shiftDate(dateStr, -1);
+  const prev = DAILY_BY_DATE[prevStr];
+  const grid = document.getElementById('day-kpi-grid');
+  grid.innerHTML = '';
+  if (!row) {
+    grid.innerHTML = '<div style="padding:16px;color:#959da5">⚠️ 该日期没有数据（数据范围 2026-04-28 ~ 2026-05-27）</div>';
+    return;
+  }
+  document.getElementById('day-title').textContent = dateStr + (prev ? '  vs  ' + prevStr : ' ');
+  DAY_KPI_DEFS.forEach(def => {
+    const curr = def.type === 'calc' ? def.fn(row) : row[def.idx];
+    const prevVal = prev ? (def.type === 'calc' ? def.fn(prev) : prev[def.idx]) : null;
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    const valStr = def.key === '客单价' ? curr.toFixed(2) : fmt(curr);
+    card.innerHTML = `<div class="label">${def.key}</div><div class="value">${valStr}</div>${deltaSpan(curr, prevVal)}`;
+    grid.appendChild(card);
+  });
+}
+
+const datePicker = document.getElementById('date-picker');
+datePicker.addEventListener('change', e => {
+  document.querySelectorAll('.date-bar button').forEach(b => b.classList.remove('active'));
+  renderDayKPI(e.target.value);
+});
+document.querySelectorAll('.date-bar button[data-shift]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.date-bar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const shift = parseInt(btn.dataset.shift);
+    const target = shiftDate(DATE_MAX, shift);
+    datePicker.value = target;
+    renderDayKPI(target);
+  });
+});
+
+// 初始化为最新日
+renderDayKPI(DATE_MAX);
+
 // ============== 总览 ==============
 const co_compare = echarts.init(document.getElementById('chart-overview-compare'));
 const last30 = DAILY.slice().reverse(); // 4/28 → 5/27 order
