@@ -158,9 +158,9 @@ co_compare.setOption({
   xAxis: {type: 'category', data: compareMetrics.map(m => m[0])},
   yAxis: [{type: 'value', name: '数值', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(1) + '万' : v}}],
   series: [
-    {name: '昨日（5/27）', type: 'bar', data: compareMetrics.map(m => m[2]), itemStyle: {color: '#2a5298'}},
-    {name: '近 7 天合计', type: 'bar', data: compareMetrics.map(m => Math.round(m[3])), itemStyle: {color: '#5295e0'}},
-    {name: '近 30 天合计', type: 'bar', data: compareMetrics.map(m => Math.round(m[4])), itemStyle: {color: '#a0c4ed'}}
+    {name: '昨日（5/27）', type: 'bar', data: compareMetrics.map(m => m[2]), itemStyle: {color: '#1e5a87'}},
+    {name: '近 7 天合计', type: 'bar', data: compareMetrics.map(m => Math.round(m[3])), itemStyle: {color: '#4a7da5'}},
+    {name: '近 30 天合计', type: 'bar', data: compareMetrics.map(m => Math.round(m[4])), itemStyle: {color: '#a8bcca'}}
   ]
 });
 
@@ -174,8 +174,8 @@ co_pie.setOption({
     type: 'pie', radius: ['45%', '70%'], avoidLabelOverlap: false,
     label: {show: true, formatter: '{b}\n{d}%'},
     data: [
-      {value: newPay30, name: '新注册付费', itemStyle: {color: '#28a745'}},
-      {value: oldPay30, name: '留存(老用户)付费', itemStyle: {color: '#2a5298'}}
+      {value: newPay30, name: '新注册付费', itemStyle: {color: '#2d7a55'}},
+      {value: oldPay30, name: '留存(老用户)付费', itemStyle: {color: '#1e5a87'}}
     ]
   }]
 });
@@ -190,7 +190,7 @@ co_success.setOption({
   series: [{
     type: 'line', smooth: true,
     data: last30.map(r => r[11] > 0 ? r[12] / r[11] * 100 : 0),
-    itemStyle: {color: '#28a745'}, areaStyle: {opacity: 0.2}
+    itemStyle: {color: '#2d7a55'}, areaStyle: {opacity: 0.2}
   }]
 });
 
@@ -207,12 +207,12 @@ tr_main.setOption({
   ],
   dataZoom: [{type: 'inside', start: 0, end: 100}, {type: 'slider', height: 20, bottom: 10}],
   series: [
-    {name: '日活', type: 'line', smooth: true, data: last30.map(r => r[1]), itemStyle: {color: '#2a5298'}},
-    {name: '注册', type: 'line', smooth: true, data: last30.map(r => r[2]), itemStyle: {color: '#5295e0'}},
-    {name: '充值（元）', type: 'line', smooth: true, yAxisIndex: 1, data: last30.map(r => r[4]), itemStyle: {color: '#28a745'}},
-    {name: '消费G点', type: 'line', smooth: true, yAxisIndex: 1, data: last30.map(r => r[6]), itemStyle: {color: '#f66a0a'}},
-    {name: '注册付费人数', type: 'line', smooth: true, data: last30.map(r => r[7]), itemStyle: {color: '#d73a49'}},
-    {name: '总下单', type: 'line', smooth: true, data: last30.map(r => r[11]), itemStyle: {color: '#6f42c1'}}
+    {name: '日活', type: 'line', smooth: true, data: last30.map(r => r[1]), itemStyle: {color: '#1e5a87'}},
+    {name: '注册', type: 'line', smooth: true, data: last30.map(r => r[2]), itemStyle: {color: '#4a7da5'}},
+    {name: '充值（元）', type: 'line', smooth: true, yAxisIndex: 1, data: last30.map(r => r[4]), itemStyle: {color: '#2d7a55'}},
+    {name: '消费G点', type: 'line', smooth: true, yAxisIndex: 1, data: last30.map(r => r[6]), itemStyle: {color: '#b08c39'}},
+    {name: '注册付费人数', type: 'line', smooth: true, data: last30.map(r => r[7]), itemStyle: {color: '#a8483d'}},
+    {name: '总下单', type: 'line', smooth: true, data: last30.map(r => r[11]), itemStyle: {color: '#6b6789'}}
   ]
 });
 
@@ -243,7 +243,7 @@ ch_wy.setOption({
   grid: {left: 180, right: 20, top: 10, bottom: 30},
   xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
   yAxis: {type: 'category', data: wy_top.map(r => r[0])},
-  series: [{type: 'bar', data: wy_top.map(r => r[4]), itemStyle: {color: '#2a5298'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
+  series: [{type: 'bar', data: wy_top.map(r => r[4]), itemStyle: {color: '#1e5a87'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
 });
 
 renderTable(document.getElementById('table-wangyou'),
@@ -269,7 +269,7 @@ ch_dj.setOption({
   grid: {left: 250, right: 20, top: 10, bottom: 30},
   xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
   yAxis: {type: 'category', data: dj_sorted.map(r => r[0].length > 30 ? r[0].slice(0, 28) + '…' : r[0])},
-  series: [{type: 'bar', data: dj_sorted.map(r => r[2]), itemStyle: {color: '#f66a0a'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
+  series: [{type: 'bar', data: dj_sorted.map(r => r[2]), itemStyle: {color: '#b08c39'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
 });
 
 renderTable(document.getElementById('table-danji'),
@@ -294,7 +294,7 @@ ch_tc_rev.setOption({
   yAxis: {type: 'category', data: tc_sorted.map(r => r[1])},
   series: [{
     type: 'bar',
-    data: tc_sorted.map(r => ({value: r[8], itemStyle: {color: r[0] === '金币套餐' ? '#2a5298' : '#28a745'}})),
+    data: tc_sorted.map(r => ({value: r[8], itemStyle: {color: r[0] === '金币套餐' ? '#1e5a87' : '#2d7a55'}})),
     label: {show: true, position: 'right', formatter: p => fmt(p.value)}
   }]
 });
@@ -306,7 +306,7 @@ ch_tc_conv.setOption({
   grid: {left: 140, right: 40, top: 10, bottom: 30},
   xAxis: {type: 'value', max: 100, axisLabel: {formatter: '{value}%'}},
   yAxis: {type: 'category', data: tc_conv.map(r => r[1])},
-  series: [{type: 'bar', data: tc_conv.map(r => +(r[6]/r[4]*100).toFixed(1)), itemStyle: {color: '#6f42c1'}, label: {show: true, position: 'right', formatter: p => p.value + '%'}}]
+  series: [{type: 'bar', data: tc_conv.map(r => +(r[6]/r[4]*100).toFixed(1)), itemStyle: {color: '#6b6789'}, label: {show: true, position: 'right', formatter: p => p.value + '%'}}]
 });
 
 renderTable(document.getElementById('table-taocan'),
@@ -329,7 +329,7 @@ ch_ch.setOption({
   grid: {left: 100, right: 30, top: 10, bottom: 30},
   xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
   yAxis: {type: 'category', data: ch_sorted.map(r => r[0])},
-  series: [{type: 'bar', data: ch_sorted.map(r => r[4]), itemStyle: {color: '#2a5298'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
+  series: [{type: 'bar', data: ch_sorted.map(r => r[4]), itemStyle: {color: '#1e5a87'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
 });
 
 renderTable(document.getElementById('table-channel'),
@@ -349,10 +349,10 @@ ch_ltv.setOption({
   yAxis: {type: 'value', name: 'LTV（元）'},
   dataZoom: [{type: 'inside'}, {type: 'slider', height: 20, bottom: 10}],
   series: [
-    {name: 'D1 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[2]), itemStyle: {color: '#5295e0'}, connectNulls: true},
-    {name: 'D7 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[3] > 0 ? r[3] : null), itemStyle: {color: '#28a745'}, connectNulls: true},
-    {name: 'D14 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[4] > 0 ? r[4] : null), itemStyle: {color: '#f66a0a'}, connectNulls: true},
-    {name: 'D30 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[5] > 0 ? r[5] : null), itemStyle: {color: '#d73a49'}, connectNulls: true}
+    {name: 'D1 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[2]), itemStyle: {color: '#4a7da5'}, connectNulls: true},
+    {name: 'D7 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[3] > 0 ? r[3] : null), itemStyle: {color: '#2d7a55'}, connectNulls: true},
+    {name: 'D14 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[4] > 0 ? r[4] : null), itemStyle: {color: '#b08c39'}, connectNulls: true},
+    {name: 'D30 LTV', type: 'line', smooth: true, data: ltv_sorted.map(r => r[5] > 0 ? r[5] : null), itemStyle: {color: '#a8483d'}, connectNulls: true}
   ]
 });
 
@@ -366,11 +366,11 @@ ch_ret.setOption({
   yAxis: {type: 'value', name: '%', axisLabel: {formatter: '{value}%'}},
   dataZoom: [{type: 'inside'}, {type: 'slider', height: 20, bottom: 10}],
   series: [
-    {name: 'D1 次留', type: 'line', smooth: true, data: ret_sorted.map(r => r[2] > 0 ? r[2] : null), itemStyle: {color: '#2a5298'}, connectNulls: true},
-    {name: 'D3', type: 'line', smooth: true, data: ret_sorted.map(r => r[3] > 0 ? r[3] : null), itemStyle: {color: '#5295e0'}, connectNulls: true},
-    {name: 'D7', type: 'line', smooth: true, data: ret_sorted.map(r => r[4] > 0 ? r[4] : null), itemStyle: {color: '#28a745'}, connectNulls: true},
-    {name: 'D14', type: 'line', smooth: true, data: ret_sorted.map(r => r[5] > 0 ? r[5] : null), itemStyle: {color: '#f66a0a'}, connectNulls: true},
-    {name: 'D30', type: 'line', smooth: true, data: ret_sorted.map(r => r[6] > 0 ? r[6] : null), itemStyle: {color: '#d73a49'}, connectNulls: true}
+    {name: 'D1 次留', type: 'line', smooth: true, data: ret_sorted.map(r => r[2] > 0 ? r[2] : null), itemStyle: {color: '#1e5a87'}, connectNulls: true},
+    {name: 'D3', type: 'line', smooth: true, data: ret_sorted.map(r => r[3] > 0 ? r[3] : null), itemStyle: {color: '#4a7da5'}, connectNulls: true},
+    {name: 'D7', type: 'line', smooth: true, data: ret_sorted.map(r => r[4] > 0 ? r[4] : null), itemStyle: {color: '#2d7a55'}, connectNulls: true},
+    {name: 'D14', type: 'line', smooth: true, data: ret_sorted.map(r => r[5] > 0 ? r[5] : null), itemStyle: {color: '#b08c39'}, connectNulls: true},
+    {name: 'D30', type: 'line', smooth: true, data: ret_sorted.map(r => r[6] > 0 ? r[6] : null), itemStyle: {color: '#a8483d'}, connectNulls: true}
   ]
 });
 

@@ -3,71 +3,319 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>g654321 商业化指标看板</title>
+<title>商业看板</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-alt: #fafbfc;
+  --header-bg: #0f1722;
+  --header-bg-2: #1a2332;
+  --text: #1a2332;
+  --text-2: #5c6878;
+  --text-3: #8a93a3;
+  --border: #e6e9ee;
+  --border-2: #eef0f3;
+  --accent: #1e5a87;
+  --accent-2: #4a7da5;
+  --gold: #b08c39;
+  --gold-soft: #d9b86b;
+  --success: #2d7a55;
+  --danger: #a8483d;
+  --slate: #5c6878;
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-2: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #2c3e50; }
-.header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 24px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.header h1 { font-size: 22px; font-weight: 600; }
-.header .meta { font-size: 13px; opacity: 0.85; margin-top: 6px; }
-.tabs { background: white; padding: 0 32px; border-bottom: 1px solid #e1e4e8; display: flex; gap: 4px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-.tab { padding: 14px 20px; cursor: pointer; font-size: 14px; color: #586069; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none; }
-.tab:hover { color: #2a5298; background: #f6f8fa; }
-.tab.active { color: #2a5298; border-bottom-color: #2a5298; font-weight: 600; background: #f6f8fa; }
-.container { padding: 24px 32px; max-width: 1600px; margin: 0 auto; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue",
+               "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.header {
+  background: linear-gradient(180deg, var(--header-bg) 0%, var(--header-bg-2) 100%);
+  color: #fff;
+  padding: 26px 40px 22px;
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 14%, transparent 50%);
+}
+.header h1 {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header h1::before {
+  content: '';
+  width: 3px; height: 22px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+.header .meta {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 8px;
+  margin-left: 17px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+.tabs {
+  background: var(--surface);
+  padding: 0 40px;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 0;
+  position: sticky; top: 0; z-index: 100;
+}
+.tab {
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-2);
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  user-select: none;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--gold);
+  font-weight: 600;
+}
+.container { padding: 28px 40px 48px; max-width: 1640px; margin: 0 auto; }
 .panel { display: none; }
 .panel.active { display: block; }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.kpi-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid #2a5298; }
-.kpi-card .label { font-size: 13px; color: #6a737d; margin-bottom: 8px; }
-.kpi-card .value { font-size: 28px; font-weight: 700; color: #24292e; line-height: 1.2; }
-.kpi-card .sub { font-size: 12px; color: #959da5; margin-top: 4px; }
-.kpi-card.accent-red { border-left-color: #d73a49; }
-.kpi-card.accent-green { border-left-color: #28a745; }
-.kpi-card.accent-orange { border-left-color: #f66a0a; }
-.chart-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; }
-.chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #24292e; display: flex; align-items: center; justify-content: space-between; }
-.chart-card .note { font-size: 11px; color: #959da5; font-weight: normal; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-1);
+  transition: box-shadow 0.15s, transform 0.15s;
+  position: relative;
+}
+.kpi-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.kpi-card .label {
+  font-size: 10.5px;
+  color: var(--text-3);
+  margin-bottom: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.kpi-card .value {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.kpi-card .sub {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+/* 子色块以左侧细线提示，不抢眼 */
+.kpi-card.accent-red, .kpi-card.accent-orange { border-left: 2px solid var(--gold); }
+.kpi-card.accent-green { border-left: 2px solid var(--success); }
+
+.section-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin: 32px 0 14px 2px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-title::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: var(--border-2);
+}
+.section-title .zh { text-transform: none; letter-spacing: 0.02em; }
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow-1);
+  margin-bottom: 14px;
+}
+.chart-card h3 {
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.chart-card .note {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
 .chart { width: 100%; height: 400px; }
 .chart-tall { height: 540px; }
-.row { display: grid; gap: 16px; margin-bottom: 16px; }
+.row { display: grid; gap: 14px; margin-bottom: 14px; }
 .row.cols-2 { grid-template-columns: 1fr 1fr; }
 @media (max-width: 1000px) { .row.cols-2 { grid-template-columns: 1fr; } }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #eaecef; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-feature-settings: "tnum" 1;
+}
+th, td { padding: 11px 14px; text-align: right; border-bottom: 1px solid var(--border-2); }
 th:first-child, td:first-child { text-align: left; }
-th { background: #f6f8fa; color: #586069; font-weight: 600; font-size: 12px; cursor: pointer; user-select: none; position: relative; }
-th:hover { background: #ebeef1; }
-th.sortable::after { content: ' ⇅'; opacity: 0.4; font-size: 10px; }
-th.sort-asc::after { content: ' ↑'; opacity: 1; color: #2a5298; }
-th.sort-desc::after { content: ' ↓'; opacity: 1; color: #2a5298; }
-tr:hover { background: #f6f8fa; }
-.table-wrap { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.warn { background: #fff5e6; border-left: 3px solid #f66a0a; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #80520d; margin-bottom: 16px; }
-.legend-toggle { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.legend-toggle label { font-size: 12px; cursor: pointer; padding: 4px 10px; background: #f6f8fa; border-radius: 4px; user-select: none; }
-.legend-toggle input { margin-right: 4px; }
-.date-bar { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.date-bar label { font-size: 13px; color: #586069; font-weight: 600; }
-.date-bar input[type="date"] { font-size: 14px; padding: 6px 10px; border: 1px solid #d1d5da; border-radius: 4px; font-family: inherit; }
-.date-bar button { font-size: 12px; padding: 6px 14px; border: 1px solid #d1d5da; background: #f6f8fa; border-radius: 4px; cursor: pointer; color: #24292e; }
-.date-bar button:hover { background: #e1e4e8; }
-.date-bar button.active { background: #2a5298; color: white; border-color: #2a5298; }
-.delta-up { color: #28a745; font-weight: 600; }
-.delta-down { color: #d73a49; font-weight: 600; }
-.delta-neutral { color: #6a737d; }
-.day-card { background: white; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-top: 3px solid #2a5298; }
-.day-card .label { font-size: 12px; color: #6a737d; }
-.day-card .value { font-size: 22px; font-weight: 700; color: #24292e; margin-top: 4px; }
-.day-card .delta { font-size: 11px; margin-top: 4px; }
+th {
+  background: var(--surface-alt);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 10.5px;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+th:hover { background: #f1f3f6; color: var(--text); }
+th.sortable::after { content: ' ↕'; opacity: 0.3; font-size: 10px; }
+th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--accent); }
+th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--accent); }
+tr:hover { background: var(--surface-alt); }
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+}
+
+.warn {
+  background: #fbf5e8;
+  border-left: 2px solid var(--gold);
+  padding: 12px 16px;
+  border-radius: 2px;
+  font-size: 12.5px;
+  color: #6b5224;
+  margin-bottom: 16px;
+  letter-spacing: 0.01em;
+}
+
+.date-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 22px;
+  box-shadow: var(--shadow-1);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.date-bar label {
+  font-size: 10.5px;
+  color: var(--text-3);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.date-bar input[type="date"] {
+  font-size: 13px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  font-feature-settings: "tnum" 1;
+}
+.date-bar button {
+  font-size: 12px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-2);
+  transition: all 0.15s;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.date-bar button:hover { background: var(--surface-alt); border-color: var(--text-3); color: var(--text); }
+.date-bar button.active {
+  background: var(--header-bg);
+  color: var(--gold-soft);
+  border-color: var(--header-bg);
+}
+
+.delta-up { color: var(--success); font-weight: 600; font-feature-settings: "tnum" 1; }
+.delta-down { color: var(--danger); font-weight: 600; font-feature-settings: "tnum" 1; }
+.delta-neutral { color: var(--text-3); }
+
+.day-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow-1);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.day-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--accent);
+}
+.day-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.day-card .label {
+  font-size: 10.5px;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.day-card .value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 8px;
+  letter-spacing: -0.01em;
+}
+.day-card .delta { font-size: 11px; margin-top: 6px; letter-spacing: 0.02em; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>📊 g654321 商业化指标看板</h1>
-  <div class="meta">数据快照：2026-05-28 18:00 · 趋势数据：2026-04-28 ~ 2026-05-27 · 数据源：admin1866 后台</div>
+  <h1>商业看板</h1>
+  <div class="meta">DATA SNAPSHOT · 2026-05-28 18:00 &nbsp;&middot;&nbsp; TREND · 2026-04-28 ～ 2026-05-27 &nbsp;&middot;&nbsp; SOURCE · admin1866</div>
 </div>
 
 <div class="tabs">
@@ -86,19 +334,19 @@ tr:hover { background: #f6f8fa; }
   <div class="panel active" id="panel-overview">
 
     <div class="date-bar">
-      <label>📅 选择日期：</label>
+      <label>选择日期</label>
       <input type="date" id="date-picker" min="2026-04-28" max="2026-05-27" value="2026-05-27">
       <button data-shift="0" class="active">最新日</button>
       <button data-shift="-1">前一天</button>
       <button data-shift="-7">7 天前</button>
       <button data-shift="-30">30 天前</button>
-      <span style="margin-left: auto; color: #6a737d; font-size: 12px;">→ 下方"选定日 KPI"会随日期变化</span>
+      <span style="margin-left: auto; color: var(--text-3); font-size: 11px; letter-spacing: 0.04em;">下方"选定日 KPI"会随日期变化</span>
     </div>
 
-    <h3 style="margin: 8px 0 12px 4px; color: #24292e; font-size: 16px;">选定日 KPI <span style="font-weight: normal; color: #959da5; font-size: 13px;" id="day-title">2026-05-27 vs 前一天</span></h3>
+    <div class="section-title"><span>DAILY KPI</span><span class="zh" id="day-title" style="margin-left:8px;font-weight:400;color:var(--text-3);">2026-05-27 vs 前一天</span></div>
     <div class="kpi-grid" id="day-kpi-grid"></div>
 
-    <h3 style="margin: 24px 0 12px 4px; color: #24292e; font-size: 16px;">累计大盘</h3>
+    <div class="section-title"><span>CUMULATIVE</span><span class="zh" style="font-weight:400;color:var(--text-3);">累计大盘</span></div>
     <div class="kpi-grid">
       <div class="kpi-card"><div class="label">总注册用户数</div><div class="value">5,612,182</div><div class="sub">累计</div></div>
       <div class="kpi-card accent-orange"><div class="label">总付费用户数</div><div class="value">80,375</div><div class="sub">付费渗透率 1.43%</div></div>
@@ -110,7 +358,7 @@ tr:hover { background: #f6f8fa; }
       <div class="kpi-card accent-red"><div class="label">客单价</div><div class="value">50.64</div><div class="sub">元 / 单（累计均值）</div></div>
     </div>
 
-    <h3 style="margin: 24px 0 12px 4px; color: #24292e; font-size: 16px;">昨日 vs 近 7 天 vs 近 30 天</h3>
+    <div class="section-title"><span>PERIOD COMPARISON</span><span class="zh" style="font-weight:400;color:var(--text-3);">昨日 vs 近 7 天 vs 近 30 天</span></div>
     <div class="chart-card">
       <div id="chart-overview-compare" class="chart" style="height:340px"></div>
     </div>
