@@ -2,6 +2,17 @@
 const fmt = n => (n == null || n === '') ? '-' : (typeof n === 'number' ? n.toLocaleString('zh-CN', {maximumFractionDigits: 2}) : n);
 const fmtPct = n => (n == null) ? '-' : (n*100).toFixed(1) + '%';
 
+// 刷新按钮
+const refreshBtn = document.getElementById('refresh-btn');
+if (refreshBtn) {
+  refreshBtn.addEventListener('click', () => {
+    refreshBtn.classList.add('spinning');
+    refreshBtn.querySelector('span').textContent = '加载中';
+    // 加 ?t=时间戳 强制绕过浏览器缓存
+    setTimeout(() => { location.href = location.pathname + '?t=' + Date.now() + location.hash; }, 350);
+  });
+}
+
 // 切 tab
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {

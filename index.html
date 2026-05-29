@@ -70,6 +70,44 @@ body {
   font-weight: 400;
   letter-spacing: 0.05em;
 }
+.refresh-btn {
+  position: absolute;
+  top: 28px;
+  right: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(217, 184, 107, 0.35);
+  color: var(--gold-soft);
+  padding: 9px 16px 9px 14px;
+  border-radius: 3px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.refresh-btn:hover {
+  background: rgba(217, 184, 107, 0.12);
+  border-color: var(--gold);
+  color: #f0d896;
+}
+.refresh-btn:active { transform: translateY(1px); }
+.refresh-btn svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+.refresh-btn.spinning svg {
+  animation: spin 0.7s cubic-bezier(0.45, 0, 0.25, 1);
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .tabs {
   background: var(--surface);
   padding: 0 40px;
@@ -316,6 +354,13 @@ tr:hover { background: var(--surface-alt); }
 <div class="header">
   <h1>商业看板</h1>
   <div class="meta">DATA SNAPSHOT · 2026-05-28 18:00 &nbsp;&middot;&nbsp; TREND · 2026-04-28 ～ 2026-05-27 &nbsp;&middot;&nbsp; SOURCE · admin1866</div>
+  <button class="refresh-btn" id="refresh-btn" title="重新加载页面，获取最新数据">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 8a6 6 0 0 1 10.243-4.243M14 8a6 6 0 0 1-10.243 4.243"/>
+      <path d="M12 1v3h-3M4 15v-3h3"/>
+    </svg>
+    <span>刷新</span>
+  </button>
 </div>
 
 <div class="tabs">
