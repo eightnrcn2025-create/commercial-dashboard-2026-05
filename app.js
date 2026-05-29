@@ -206,10 +206,10 @@ function rangeStats(fromStr, toStr) {
 }
 
 function renderRangeComparison() {
-  const r1from = document.getElementById('r1-from').value;
-  const r1to = document.getElementById('r1-to').value;
-  const r2from = document.getElementById('r2-from').value;
-  const r2to = document.getElementById('r2-to').value;
+  let r1from = document.getElementById('r1-from').value;
+  let r1to = document.getElementById('r1-to').value;
+  let r2from = document.getElementById('r2-from').value;
+  let r2to = document.getElementById('r2-to').value;
 
   const info = document.getElementById('range-info');
   const grid = document.getElementById('range-kpi-grid');
@@ -218,6 +218,16 @@ function renderRangeComparison() {
     info.innerHTML = '请选择两段日期';
     grid.innerHTML = '';
     return;
+  }
+
+  // 校验：from <= to，否则自动交换
+  if (r1from > r1to) { [r1from, r1to] = [r1to, r1from];
+    document.getElementById('r1-from').value = r1from;
+    document.getElementById('r1-to').value = r1to;
+  }
+  if (r2from > r2to) { [r2from, r2to] = [r2to, r2from];
+    document.getElementById('r2-from').value = r2from;
+    document.getElementById('r2-to').value = r2to;
   }
 
   const a = rangeStats(r1from, r1to);
@@ -252,15 +262,14 @@ function renderRangeComparison() {
 }
 
 function applyRangePreset(days) {
-  // 本期：DATE_MAX 往前 days 天；对比期：再往前 days 天
+  // 本期：DATE_MAX 往前 days 天；对比期：紧挨着再往前 days 天
   const aTo = DATE_MAX;
   const aFrom = shiftDate(DATE_MAX, -(days - 1));
   const bTo = shiftDate(aFrom, -1);
   const bFrom = shiftDate(bTo, -(days - 1));
 
-  // 检查是否超出数据范围
   if (bFrom < DATE_MIN) {
-    alert(`数据范围只有 ${DATE_MIN} ~ ${DATE_MAX}（${Math.round((new Date(DATE_MAX) - new Date(DATE_MIN))/86400000)+1} 天），"近${days}天 vs 上${days}天"需要 ${days*2} 天数据。\n\n等 launchd 自动扒几次后会有足够数据。`);
+    alert(`数据范围只有 ${DATE_MIN} ~ ${DATE_MAX}，按"${days==1?'昨日 vs 前日':'近'+days+'天 vs 上'+days+'天'}"需要 ${days*2} 天数据。`);
     return;
   }
 
