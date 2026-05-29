@@ -1,1 +1,6 @@
 .claude/
+.venv/
+logs/
+.dashboard-chrome-profile/
+__pycache__/
+*.pyc

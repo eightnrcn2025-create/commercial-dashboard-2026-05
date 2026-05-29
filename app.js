@@ -13,6 +13,34 @@ if (refreshBtn) {
   });
 }
 
+// 数据时间戳显示 + 相对时间
+function updateSnapshotDisplay() {
+  if (typeof SNAPSHOT_AT === 'undefined') return;
+  const snap = new Date(SNAPSHOT_AT);
+  const now = new Date();
+  const diffMs = now - snap;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+
+  // 绝对时间显示
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('snapshot-time').textContent =
+    `${snap.getFullYear()}-${pad(snap.getMonth()+1)}-${pad(snap.getDate())} ${pad(snap.getHours())}:${pad(snap.getMinutes())}`;
+
+  // 相对时间 + 颜色等级
+  const rel = document.getElementById('snapshot-rel');
+  rel.classList.remove('warn', 'stale');
+  let text;
+  if (diffMin < 2) text = '· 刚刚更新';
+  else if (diffMin < 60) text = `· ${diffMin} 分钟前`;
+  else if (diffHr < 24) { text = `· ${diffHr} 小时前`; if (diffHr >= 4) rel.classList.add('warn'); }
+  else { text = `· ${diffDay} 天前`; rel.classList.add('stale'); }
+  rel.textContent = text;
+}
+updateSnapshotDisplay();
+setInterval(updateSnapshotDisplay, 60000); // 每分钟刷新相对时间
+
 // 切 tab
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {

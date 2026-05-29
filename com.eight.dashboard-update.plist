@@ -10,27 +10,9 @@
         <string>/Users/laoba/commercial-dashboard/run.sh</string>
     </array>
 
-    <key>StartCalendarInterval</key>
-    <array>
-        <dict>
-            <key>Hour</key>
-            <integer>9</integer>
-            <key>Minute</key>
-            <integer>0</integer>
-        </dict>
-        <dict>
-            <key>Hour</key>
-            <integer>11</integer>
-            <key>Minute</key>
-            <integer>0</integer>
-        </dict>
-        <dict>
-            <key>Hour</key>
-            <integer>14</integer>
-            <key>Minute</key>
-            <integer>0</integer>
-        </dict>
-    </array>
+    <!-- 每 1800 秒（30 分钟）跑一次。Mac 不在线就跳过，下次再试 -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
 
     <key>StandardOutPath</key>
     <string>/Users/laoba/commercial-dashboard/logs/stdout.log</string>

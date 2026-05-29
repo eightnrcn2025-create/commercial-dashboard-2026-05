@@ -108,6 +108,26 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+.snapshot-rel {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  background: rgba(45, 122, 85, 0.18);
+  color: #8ed4ad;
+  border: 1px solid rgba(45, 122, 85, 0.35);
+}
+.snapshot-rel.warn {
+  background: rgba(176, 140, 57, 0.18);
+  color: var(--gold-soft);
+  border-color: rgba(176, 140, 57, 0.5);
+}
+.snapshot-rel.stale {
+  background: rgba(168, 72, 61, 0.2);
+  color: #e0a098;
+  border-color: rgba(168, 72, 61, 0.5);
+}
 .tabs {
   background: var(--surface);
   padding: 0 40px;
@@ -353,7 +373,11 @@ tr:hover { background: var(--surface-alt); }
 
 <div class="header">
   <h1>商业看板</h1>
-  <div class="meta">DATA SNAPSHOT · 2026-05-28 18:00 &nbsp;&middot;&nbsp; TREND · 2026-04-28 ～ 2026-05-27 &nbsp;&middot;&nbsp; SOURCE · admin1866</div>
+  <div class="meta">
+    <span id="snapshot-label">DATA SNAPSHOT · </span><span id="snapshot-time">--</span>
+    <span id="snapshot-rel" class="snapshot-rel"></span>
+    &nbsp;&middot;&nbsp; SOURCE · admin1866
+  </div>
   <button class="refresh-btn" id="refresh-btn" title="重新加载页面，获取最新数据">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M2 8a6 6 0 0 1 10.243-4.243M14 8a6 6 0 0 1-10.243 4.243"/>
@@ -514,7 +538,10 @@ tr:hover { background: var(--surface-alt); }
 
 </div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script>
+  // 给 data.js / app.js 加上当前时间戳，彻底绕开浏览器缓存
+  document.write('<scr' + 'ipt src="data.js?t=' + Date.now() + '"></scr' + 'ipt>');
+  document.write('<scr' + 'ipt src="app.js?t=' + Date.now() + '"></scr' + 'ipt>');
+</script>
 </body>
 </html>
