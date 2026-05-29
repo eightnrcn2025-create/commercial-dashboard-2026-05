@@ -259,6 +259,11 @@ function renderRangeComparison() {
     `;
     grid.appendChild(card);
   });
+
+  // 联动：下方两个图也按本期区间重新渲染
+  if (typeof renderOverviewRangeCharts === 'function') {
+    renderOverviewRangeCharts(r1from, r1to);
+  }
 }
 
 function applyRangePreset(days) {
@@ -326,35 +331,50 @@ const sum30 = idx => DAILY.reduce((s, r) => s + r[idx], 0);
 const avg7 = idx => sum7(idx) / 7;
 const avg30 = idx => sum30(idx) / 30;
 
-// 新 vs 留存付费金额占比（近30天）
-const newPay30 = sum30(8), oldPay30 = sum30(10);
+// 新 vs 留存付费金额占比 + 每日订单成功率（跟随本期区间）
 const co_pie = echarts.init(document.getElementById('chart-overview-pie'));
-co_pie.setOption({
-  tooltip: {trigger: 'item', formatter: '{b}: {c} 元 ({d}%)'},
-  legend: {bottom: 0},
-  series: [{
-    type: 'pie', radius: ['45%', '70%'], avoidLabelOverlap: false,
-    label: {show: true, formatter: '{b}\n{d}%'},
-    data: [
-      {value: newPay30, name: '新注册付费', itemStyle: {color: '#2d7a55'}},
-      {value: oldPay30, name: '留存(老用户)付费', itemStyle: {color: '#1e5a87'}}
-    ]
-  }]
-});
-
-// 每日订单成功率
 const co_success = echarts.init(document.getElementById('chart-overview-success'));
-co_success.setOption({
-  tooltip: {trigger: 'axis', formatter: p => `${p[0].name}<br/>成功率: ${p[0].value.toFixed(1)}%<br/>总下单: ${fmt(last30[p[0].dataIndex][11])}<br/>有效订单: ${fmt(last30[p[0].dataIndex][12])}`},
-  grid: {left: 50, right: 20, top: 30, bottom: 50},
-  xAxis: {type: 'category', data: last30.map(r => r[0].slice(5))},
-  yAxis: {type: 'value', name: '%', max: 100, axisLabel: {formatter: '{value}%'}},
-  series: [{
-    type: 'line', smooth: true,
-    data: last30.map(r => r[11] > 0 ? r[12] / r[11] * 100 : 0),
-    itemStyle: {color: '#2d7a55'}, areaStyle: {opacity: 0.2}
-  }]
-});
+
+function renderOverviewRangeCharts(fromStr, toStr) {
+  const rows = DAILY.filter(r => r[0] >= fromStr && r[0] <= toStr);
+  const asc = rows.slice().sort((a, b) => a[0].localeCompare(b[0]));
+
+  // 标签
+  document.getElementById('pie-period-label').textContent = `${fromStr} → ${toStr}（${rows.length} 天）`;
+  document.getElementById('success-period-label').textContent = `${fromStr} → ${toStr}（${rows.length} 天）/ 有效订单 / 总下单`;
+
+  // 饼图
+  const newPay = rows.reduce((s, r) => s + r[8], 0);
+  const oldPay = rows.reduce((s, r) => s + r[10], 0);
+  co_pie.setOption({
+    tooltip: {trigger: 'item', formatter: '{b}: {c} 元 ({d}%)'},
+    legend: {bottom: 0},
+    series: [{
+      type: 'pie', radius: ['45%', '70%'], avoidLabelOverlap: false,
+      label: {show: true, formatter: '{b}\n{d}%'},
+      data: [
+        {value: newPay, name: '新注册付费', itemStyle: {color: '#2d7a55'}},
+        {value: oldPay, name: '留存(老用户)付费', itemStyle: {color: '#1e5a87'}}
+      ]
+    }]
+  }, true);
+
+  // 订单成功率
+  co_success.setOption({
+    tooltip: {trigger: 'axis', formatter: p => {
+      const r = asc[p[0].dataIndex];
+      return `${r[0]}<br/>成功率: ${p[0].value.toFixed(1)}%<br/>总下单: ${fmt(r[11])}<br/>有效订单: ${fmt(r[12])}`;
+    }},
+    grid: {left: 50, right: 20, top: 30, bottom: 50},
+    xAxis: {type: 'category', data: asc.map(r => r[0].slice(5))},
+    yAxis: {type: 'value', name: '%', max: 100, axisLabel: {formatter: '{value}%'}},
+    series: [{
+      type: 'line', smooth: true,
+      data: asc.map(r => r[11] > 0 ? r[12] / r[11] * 100 : 0),
+      itemStyle: {color: '#2d7a55'}, areaStyle: {opacity: 0.2}
+    }]
+  }, true);
+}
 
 // ============== 30天趋势 ==============
 const tr_main = echarts.init(document.getElementById('chart-trend-main'));
@@ -535,6 +555,13 @@ ch_ret.setOption({
     {name: 'D30', type: 'line', smooth: true, data: ret_sorted.map(r => r[6] > 0 ? r[6] : null), itemStyle: {color: '#a8483d'}, connectNulls: true}
   ]
 });
+
+// 初始化：用本期区间渲染下方两个图（因为 renderOverviewRangeCharts 定义在 renderRangeComparison 之后）
+(() => {
+  const f = document.getElementById('r1-from').value;
+  const t = document.getElementById('r1-to').value;
+  if (f && t) renderOverviewRangeCharts(f, t);
+})();
 
 // 窗口 resize
 window.addEventListener('resize', () => {
