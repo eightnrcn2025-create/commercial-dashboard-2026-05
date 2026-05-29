@@ -525,11 +525,17 @@ tr:hover { background: var(--surface-alt); }
 
   <!-- 网游 -->
   <div class="panel" id="panel-wangyou">
+    <div class="date-bar">
+      <label>时间区间</label>
+      <button class="active" data-period="7" data-tab="wangyou">近 7 天</button>
+      <button data-period="30" data-tab="wangyou">近 30 天</button>
+      <span style="margin-left: auto; color: var(--text-3); font-size: 11px;" id="wy-range-label"></span>
+    </div>
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="label">网游注册（48 款里 23 款有活跃）</div><div class="value" id="wy-kpi-reg"></div><div class="sub">近 7 天</div></div>
-      <div class="kpi-card accent-green"><div class="label">网游总充值（元）</div><div class="value" id="wy-kpi-rev"></div><div class="sub">近 7 天</div></div>
-      <div class="kpi-card accent-orange"><div class="label">网游总消费 G 点</div><div class="value" id="wy-kpi-cost"></div><div class="sub">近 7 天</div></div>
-      <div class="kpi-card"><div class="label">充值用户数</div><div class="value" id="wy-kpi-payer"></div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card"><div class="label">活跃网游数</div><div class="value" id="wy-kpi-active"></div><div class="sub">48 款里多少有活跃</div></div>
+      <div class="kpi-card accent-green"><div class="label">网游总充值（元）</div><div class="value" id="wy-kpi-rev"></div><div class="sub" id="wy-kpi-rev-sub"></div></div>
+      <div class="kpi-card accent-orange"><div class="label">网游总消费 G 点</div><div class="value" id="wy-kpi-cost"></div><div class="sub" id="wy-kpi-cost-sub"></div></div>
+      <div class="kpi-card"><div class="label">充值用户数</div><div class="value" id="wy-kpi-payer"></div><div class="sub" id="wy-kpi-payer-sub"></div></div>
     </div>
     <div class="chart-card">
       <h3>网游充值金额排行 <span class="note">近 7 天 · 点条形可看明细</span></h3>
@@ -544,10 +550,16 @@ tr:hover { background: var(--surface-alt); }
   <!-- 单机 -->
   <div class="panel" id="panel-danji">
     <div class="warn">⚠️ 单机的"充值金额"全 0，销售衡量用"消费 G 点"（用户用既有 G 点购买/下载单机）</div>
+    <div class="date-bar">
+      <label>时间区间</label>
+      <button class="active" data-period="7" data-tab="danji">近 7 天</button>
+      <button data-period="30" data-tab="danji">近 30 天</button>
+      <span style="margin-left: auto; color: var(--text-3); font-size: 11px;" id="dj-range-label"></span>
+    </div>
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="label">单机有活跃游戏数</div><div class="value">176</div><div class="sub">近 7 天</div></div>
-      <div class="kpi-card accent-orange"><div class="label">单机消费 G 点 TOP20 合计</div><div class="value" id="dj-kpi-cost"></div><div class="sub">近 7 天</div></div>
-      <div class="kpi-card accent-green"><div class="label">单机下载量 TOP20 合计</div><div class="value" id="dj-kpi-dl"></div><div class="sub">近 7 天</div></div>
+      <div class="kpi-card"><div class="label">单机有活跃游戏数</div><div class="value" id="dj-kpi-active"></div><div class="sub" id="dj-kpi-active-sub"></div></div>
+      <div class="kpi-card accent-orange"><div class="label">单机消费 G 点 TOP20 合计</div><div class="value" id="dj-kpi-cost"></div><div class="sub" id="dj-kpi-cost-sub"></div></div>
+      <div class="kpi-card accent-green"><div class="label">单机下载量 TOP20 合计</div><div class="value" id="dj-kpi-dl"></div><div class="sub" id="dj-kpi-dl-sub"></div></div>
     </div>
     <div class="chart-card">
       <h3>单机消费 G 点 TOP 20 <span class="note">近 7 天</span></h3>
@@ -561,6 +573,12 @@ tr:hover { background: var(--surface-alt); }
 
   <!-- 套餐 -->
   <div class="panel" id="panel-taocan">
+    <div class="date-bar">
+      <label>时间区间</label>
+      <button class="active" data-period="7" data-tab="taocan">近 7 天</button>
+      <button data-period="30" data-tab="taocan">近 30 天</button>
+      <span style="margin-left: auto; color: var(--text-3); font-size: 11px;" id="tc-range-label"></span>
+    </div>
     <div class="row cols-2">
       <div class="chart-card">
         <h3>套餐实际收入 <span class="note">近 7 天 · 分金币/会员</span></h3>
@@ -580,6 +598,12 @@ tr:hover { background: var(--surface-alt); }
   <!-- 渠道 -->
   <div class="panel" id="panel-channel">
     <div class="warn">official 渠道一家独大（占 76% 充值），其他渠道虽小但 ARPU 不一定差 — 看明细表的 ARPU 列</div>
+    <div class="date-bar">
+      <label>时间区间</label>
+      <button class="active" data-period="7" data-tab="channel">近 7 天</button>
+      <button data-period="30" data-tab="channel">近 30 天</button>
+      <span style="margin-left: auto; color: var(--text-3); font-size: 11px;" id="ch-range-label"></span>
+    </div>
     <div class="chart-card">
       <h3>渠道充值金额排行 <span class="note">近 7 天 · TOP 19 有营收</span></h3>
       <div id="chart-channel" class="chart chart-tall"></div>

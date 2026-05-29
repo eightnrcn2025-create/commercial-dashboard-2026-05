@@ -21,7 +21,7 @@ ADMIN = 'http://18game.line.ccc:8001/admin1866'
 
 today = date.today()
 yest = today - timedelta(days=1)
-d90 = yest - timedelta(days=89)   # DAILY 拉 90 天，支持月对月区间对比
+EARLIEST = date(2025, 9, 1)       # 后台最早数据（2025-09-01）
 d30 = yest - timedelta(days=29)
 d7 = yest - timedelta(days=6)
 
@@ -173,6 +173,24 @@ def fetch_report(page, label, report_name, start, end):
     print(f'      ✓ {len(rows)} 行', flush=True)
     return rows
 
+def fetch_report_chunked(page, label, report_name, start, end, chunk_days=14):
+    """分块抓取避免单次 3000 行上限"""
+    all_rows = []
+    cur = start
+    i = 0
+    while cur <= end:
+        chunk_end = min(cur + timedelta(days=chunk_days - 1), end)
+        i += 1
+        print(f'[{label} chunk{i}] {fmt(cur)} ~ {fmt(chunk_end)} -> {report_name}', flush=True)
+        go_to_report(page, report_name)
+        set_date_range_and_search(page, fmt(cur), fmt(chunk_end))
+        set_page_size_3000(page)
+        rows = grab_rows(page)
+        print(f'      ✓ {len(rows)} 行', flush=True)
+        all_rows.extend(rows)
+        cur = chunk_end + timedelta(days=1)
+    return all_rows
+
 # =========== 主流程 ===========
 
 def main():
@@ -201,27 +219,37 @@ def main():
             return 2
 
         try:
-            daily = fetch_report(page, '1/7', '系统统计-报表', d90, yest)
+            daily = fetch_report(page, '1/7', '系统统计-报表', EARLIEST, yest)
             DAILY = [[r[0]] + [_num(x) for x in r[1:13]] for r in daily if len(r) >= 13]
             DAILY.sort(key=lambda r: r[0], reverse=True)
 
-            tc = fetch_report(page, '2/7', '套餐统计', d7, yest)
-            TAOCAN = aggregate_taocan(tc)
+            # 7 天 + 30 天 双快照，前端切换用
+            tc7 = fetch_report(page, '2a 套餐7天', '套餐统计', d7, yest)
+            TAOCAN = aggregate_taocan(tc7)
+            tc30 = fetch_report(page, '2b 套餐30天', '套餐统计', d30, yest)
+            TAOCAN_30D = aggregate_taocan(tc30)
 
-            ny = fetch_report(page, '3/7', '网络游戏运营统计', d7, yest)
-            NGIDS = extract_ids(ny, col=2)
-            print(f'      ✓ 识别出 {len(NGIDS)} 个网游', flush=True)
+            ny7 = fetch_report(page, '3a 网游运营7天', '网络游戏运营统计', d7, yest)
+            NGIDS_7D = extract_ids(ny7, col=2)
+            print(f'      ✓ 识别 {len(NGIDS_7D)} 个网游(7天)', flush=True)
+            ny30 = fetch_report(page, '3b 网游运营30天', '网络游戏运营统计', d30, yest)
+            NGIDS_30D = extract_ids(ny30, col=2)
+            print(f'      ✓ 识别 {len(NGIDS_30D)} 个网游(30天)', flush=True)
 
-            g = fetch_report(page, '4/7', '游戏统计', d7, yest)
-            WANGYOU, DANJI = aggregate_games(g, NGIDS)
+            g7 = fetch_report(page, '4a 游戏7天', '游戏统计', d7, yest)
+            WANGYOU, DANJI = aggregate_games(g7, NGIDS_7D)
+            g30 = fetch_report_chunked(page, '4b 游戏30天', '游戏统计', d30, yest, chunk_days=14)
+            WANGYOU_30D, DANJI_30D = aggregate_games(g30, NGIDS_30D)
 
-            ch = fetch_report(page, '5/7', '渠道统计', d7, yest)
-            CHANNEL = aggregate_channel(ch)
+            ch7 = fetch_report(page, '5a 渠道7天', '渠道统计', d7, yest)
+            CHANNEL = aggregate_channel(ch7)
+            ch30 = fetch_report(page, '5b 渠道30天', '渠道统计', d30, yest)
+            CHANNEL_30D = aggregate_channel(ch30)
 
-            ltv = fetch_report(page, '6/7', '网络游戏注册LTV表', d30, yest)
+            ltv = fetch_report(page, '6/7', '网络游戏注册LTV表', EARLIEST, yest)
             LTV = aggregate_ltv(ltv)
 
-            ret = fetch_report(page, '7/7', '网络游戏注册留存', d30, yest)
+            ret = fetch_report(page, '7/7', '网络游戏注册留存', EARLIEST, yest)
             RETENTION = aggregate_retention(ret)
         except Exception as e:
             print(f'ERROR: 扒数据失败 - {type(e).__name__}: {e}', file=sys.stderr)
@@ -231,7 +259,11 @@ def main():
 
         ctx.close()
 
-    write_data_js(REPO / 'data.js', DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION)
+    # 与已有归档合并，避免后台滚动删除丢历史
+    DAILY, LTV, RETENTION = archive_merge(REPO / 'data.js', DAILY, LTV, RETENTION)
+
+    write_data_js(REPO / 'data.js', DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION,
+                  WANGYOU_30D, DANJI_30D, TAOCAN_30D, CHANNEL_30D)
     print('✓ data.js 已更新', flush=True)
 
     if push_github(REPO):
@@ -364,7 +396,48 @@ def aggregate_retention(rows):
     out.sort(key=lambda r: r[0], reverse=True)
     return out
 
-def write_data_js(path, DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION):
+def read_existing(path):
+    """从已有 data.js 解析出 DAILY/LTV/RETENTION 归档数据"""
+    if not path.exists(): return {}
+    txt = path.read_text(encoding='utf-8')
+    out = {}
+    for name in ['DAILY', 'LTV', 'RETENTION']:
+        m = re.search(rf'const {name} = (\[[\s\S]*?\]);\s*\n', txt)
+        if m:
+            try:
+                out[name] = json.loads(m.group(1))
+            except (json.JSONDecodeError, Exception):
+                print(f'  [archive] 解析 {name} 失败', flush=True)
+    return out
+
+def merge_by_date(new_rows, old_rows):
+    """按日期合并：日期已在 new 里的用 new；只在 old 的保留"""
+    by_date = {r[0]: r for r in old_rows}
+    for r in new_rows:
+        by_date[r[0]] = r
+    out = list(by_date.values())
+    out.sort(key=lambda r: r[0], reverse=True)
+    return out
+
+def archive_merge(path, DAILY, LTV, RETENTION):
+    """合并新数据和已有归档，避免后台数据被删时丢历史"""
+    existing = read_existing(path)
+    if not existing:
+        print('  [archive] 没有已有归档，跳过合并', flush=True)
+        return DAILY, LTV, RETENTION
+    old_d = existing.get('DAILY', [])
+    old_l = existing.get('LTV', [])
+    old_r = existing.get('RETENTION', [])
+    merged_d = merge_by_date(DAILY, old_d)
+    merged_l = merge_by_date(LTV, old_l)
+    merged_r = merge_by_date(RETENTION, old_r)
+    print(f'  [archive] DAILY: 新 {len(DAILY)} + 旧 {len(old_d)} → 合并 {len(merged_d)}', flush=True)
+    print(f'  [archive] LTV:   新 {len(LTV)} + 旧 {len(old_l)} → 合并 {len(merged_l)}', flush=True)
+    print(f'  [archive] RETEN: 新 {len(RETENTION)} + 旧 {len(old_r)} → 合并 {len(merged_r)}', flush=True)
+    return merged_d, merged_l, merged_r
+
+def write_data_js(path, DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION,
+                  WANGYOU_30D=None, DANJI_30D=None, TAOCAN_30D=None, CHANNEL_30D=None):
     snapshot = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     js = f"""// 自动生成 {snapshot} · 数据源：admin1866 后台
 
@@ -373,12 +446,16 @@ const SNAPSHOT_AT = "{snapshot}";
 const DAILY = {json.dumps(DAILY, ensure_ascii=False)};
 
 const WANGYOU = {json.dumps(WANGYOU, ensure_ascii=False)};
+const WANGYOU_30D = {json.dumps(WANGYOU_30D or WANGYOU, ensure_ascii=False)};
 
 const DANJI = {json.dumps(DANJI, ensure_ascii=False)};
+const DANJI_30D = {json.dumps(DANJI_30D or DANJI, ensure_ascii=False)};
 
 const TAOCAN = {json.dumps(TAOCAN, ensure_ascii=False)};
+const TAOCAN_30D = {json.dumps(TAOCAN_30D or TAOCAN, ensure_ascii=False)};
 
 const CHANNEL = {json.dumps(CHANNEL, ensure_ascii=False)};
+const CHANNEL_30D = {json.dumps(CHANNEL_30D or CHANNEL, ensure_ascii=False)};
 
 const LTV = {json.dumps(LTV, ensure_ascii=False)};
 

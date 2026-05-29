@@ -406,119 +406,168 @@ renderTable(document.getElementById('table-trend'),
 );
 
 // ============== 网游 ==============
-const wy_active = WANGYOU.filter(r => r[4] > 0);
-document.getElementById('wy-kpi-reg').textContent = fmt(wy_active.reduce((s, r) => s + r[1], 0));
-document.getElementById('wy-kpi-rev').textContent = fmt(wy_active.reduce((s, r) => s + r[4], 0));
-document.getElementById('wy-kpi-cost').textContent = fmt(wy_active.reduce((s, r) => s + r[5], 0));
-document.getElementById('wy-kpi-payer').textContent = fmt(wy_active.reduce((s, r) => s + r[10], 0));
-
 const ch_wy = echarts.init(document.getElementById('chart-wangyou'));
-const wy_top = wy_active.slice().sort((a, b) => a[4] - b[4]);
-ch_wy.setOption({
-  tooltip: {
-    trigger: 'axis', axisPointer: {type: 'shadow'},
-    formatter: p => {
-      const r = wy_top[p[0].dataIndex];
-      return `<b>${r[0]}</b><br/>充值: ${fmt(r[4])} 元<br/>消费G点: ${fmt(r[5])}<br/>日活: ${fmt(r[2])}<br/>充值人数: ${fmt(r[10])}<br/>ARPPU: ${r[10] > 0 ? (r[4]/r[10]).toFixed(2) : '-'} 元`;
-    }
-  },
-  grid: {left: 180, right: 20, top: 10, bottom: 30},
-  xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
-  yAxis: {type: 'category', data: wy_top.map(r => r[0])},
-  series: [{type: 'bar', data: wy_top.map(r => r[4]), itemStyle: {color: '#1e5a87'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
-});
 
-renderTable(document.getElementById('table-wangyou'),
-  ['游戏', '注册', '日活', '下载', '充值', '消费G点', '充值人数', '付费率%', 'ARPU', 'ARPPU'],
-  WANGYOU.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[10], r[2] > 0 ? (r[10]/r[2]*100) : 0, r[2] > 0 ? (r[4]/r[2]) : 0, r[10] > 0 ? (r[4]/r[10]) : 0]),
-  [null, fmt, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(2)+'%', v => v.toFixed(2), v => v.toFixed(2)]
-);
+function renderWangyou(period) {
+  const data = period === 30 ? WANGYOU_30D : WANGYOU;
+  const active = data.filter(r => r[4] > 0);
+  document.getElementById('wy-kpi-active').textContent = active.length + ' / 48';
+  document.getElementById('wy-kpi-rev').textContent = fmt(active.reduce((s, r) => s + r[4], 0));
+  document.getElementById('wy-kpi-cost').textContent = fmt(active.reduce((s, r) => s + r[5], 0));
+  document.getElementById('wy-kpi-payer').textContent = fmt(active.reduce((s, r) => s + r[10], 0));
+  document.getElementById('wy-range-label').textContent = `数据范围 近 ${period} 天`;
+  const subTxt = `近 ${period} 天`;
+  document.getElementById('wy-kpi-rev-sub').textContent = subTxt;
+  document.getElementById('wy-kpi-cost-sub').textContent = subTxt;
+  document.getElementById('wy-kpi-payer-sub').textContent = subTxt;
+
+  const top = active.slice().sort((a, b) => a[4] - b[4]);
+  ch_wy.setOption({
+    tooltip: {
+      trigger: 'axis', axisPointer: {type: 'shadow'},
+      formatter: p => {
+        const r = top[p[0].dataIndex];
+        return `<b>${r[0]}</b><br/>充值: ${fmt(r[4])} 元<br/>消费G点: ${fmt(r[5])}<br/>日活: ${fmt(r[2])}<br/>充值人数: ${fmt(r[10])}<br/>ARPPU: ${r[10] > 0 ? (r[4]/r[10]).toFixed(2) : '-'} 元`;
+      }
+    },
+    grid: {left: 180, right: 20, top: 10, bottom: 30},
+    xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
+    yAxis: {type: 'category', data: top.map(r => r[0])},
+    series: [{type: 'bar', data: top.map(r => r[4]), itemStyle: {color: '#1e5a87'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
+  }, true);
+
+  renderTable(document.getElementById('table-wangyou'),
+    ['游戏', '注册', '日活', '下载', '充值', '消费G点', '充值人数', '付费率%', 'ARPU', 'ARPPU'],
+    data.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[10], r[2] > 0 ? (r[10]/r[2]*100) : 0, r[2] > 0 ? (r[4]/r[2]) : 0, r[10] > 0 ? (r[4]/r[10]) : 0]),
+    [null, fmt, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(2)+'%', v => v.toFixed(2), v => v.toFixed(2)]
+  );
+}
+renderWangyou(7);
 
 // ============== 单机 ==============
-document.getElementById('dj-kpi-cost').textContent = fmt(DANJI.reduce((s, r) => s + r[2], 0));
-document.getElementById('dj-kpi-dl').textContent = fmt(DANJI.reduce((s, r) => s + r[1], 0));
-
 const ch_dj = echarts.init(document.getElementById('chart-danji'));
-const dj_sorted = DANJI.slice().sort((a, b) => a[2] - b[2]);
-ch_dj.setOption({
-  tooltip: {
-    trigger: 'axis', axisPointer: {type: 'shadow'},
-    formatter: p => {
-      const r = dj_sorted[p[0].dataIndex];
-      return `<b>${r[0]}</b><br/>消费G点: ${fmt(r[2])}<br/>下载量: ${fmt(r[1])}<br/>件均G点: ${r[1] > 0 ? (r[2]/r[1]).toFixed(2) : '-'}`;
-    }
-  },
-  grid: {left: 250, right: 20, top: 10, bottom: 30},
-  xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
-  yAxis: {type: 'category', data: dj_sorted.map(r => r[0].length > 30 ? r[0].slice(0, 28) + '…' : r[0])},
-  series: [{type: 'bar', data: dj_sorted.map(r => r[2]), itemStyle: {color: '#b08c39'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
-});
 
-renderTable(document.getElementById('table-danji'),
-  ['单机游戏', '下载量', '消费G点', '件均G点'],
-  DANJI.map(r => [r[0], r[1], r[2], r[1] > 0 ? (r[2]/r[1]) : 0]),
-  [null, fmt, fmt, v => v.toFixed(2)]
-);
+function renderDanji(period) {
+  const data = period === 30 ? DANJI_30D : DANJI;
+  document.getElementById('dj-kpi-active').textContent = data.length;
+  document.getElementById('dj-kpi-cost').textContent = fmt(data.reduce((s, r) => s + r[2], 0));
+  document.getElementById('dj-kpi-dl').textContent = fmt(data.reduce((s, r) => s + r[1], 0));
+  const subTxt = `近 ${period} 天 TOP 20`;
+  document.getElementById('dj-range-label').textContent = `数据范围 近 ${period} 天`;
+  document.getElementById('dj-kpi-active-sub').textContent = `近 ${period} 天 TOP 20`;
+  document.getElementById('dj-kpi-cost-sub').textContent = subTxt;
+  document.getElementById('dj-kpi-dl-sub').textContent = subTxt;
+
+  const sorted = data.slice().sort((a, b) => a[2] - b[2]);
+  ch_dj.setOption({
+    tooltip: {
+      trigger: 'axis', axisPointer: {type: 'shadow'},
+      formatter: p => {
+        const r = sorted[p[0].dataIndex];
+        return `<b>${r[0]}</b><br/>消费G点: ${fmt(r[2])}<br/>下载量: ${fmt(r[1])}<br/>件均G点: ${r[1] > 0 ? (r[2]/r[1]).toFixed(2) : '-'}`;
+      }
+    },
+    grid: {left: 250, right: 20, top: 10, bottom: 30},
+    xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
+    yAxis: {type: 'category', data: sorted.map(r => r[0].length > 30 ? r[0].slice(0, 28) + '…' : r[0])},
+    series: [{type: 'bar', data: sorted.map(r => r[2]), itemStyle: {color: '#b08c39'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
+  }, true);
+
+  renderTable(document.getElementById('table-danji'),
+    ['单机游戏', '下载量', '消费G点', '件均G点'],
+    data.map(r => [r[0], r[1], r[2], r[1] > 0 ? (r[2]/r[1]) : 0]),
+    [null, fmt, fmt, v => v.toFixed(2)]
+  );
+}
+renderDanji(7);
 
 // ============== 套餐 ==============
 const ch_tc_rev = echarts.init(document.getElementById('chart-taocan-rev'));
-const tc_sorted = TAOCAN.slice().filter(r => r[8] > 0).sort((a, b) => a[8] - b[8]);
-ch_tc_rev.setOption({
-  tooltip: {
-    trigger: 'axis', axisPointer: {type: 'shadow'},
-    formatter: p => {
-      const r = tc_sorted[p[0].dataIndex];
-      return `<b>${r[1]}</b> (${r[0]})<br/>实际收入: ${fmt(r[8])} 元<br/>下单: ${fmt(r[4])}<br/>成功: ${fmt(r[6])}<br/>支付成功率: ${r[4] > 0 ? (r[6]/r[4]*100).toFixed(1) : '-'}%`;
-    }
-  },
-  grid: {left: 140, right: 20, top: 10, bottom: 30},
-  xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
-  yAxis: {type: 'category', data: tc_sorted.map(r => r[1])},
-  series: [{
-    type: 'bar',
-    data: tc_sorted.map(r => ({value: r[8], itemStyle: {color: r[0] === '金币套餐' ? '#1e5a87' : '#2d7a55'}})),
-    label: {show: true, position: 'right', formatter: p => fmt(p.value)}
-  }]
-});
-
 const ch_tc_conv = echarts.init(document.getElementById('chart-taocan-conv'));
-const tc_conv = TAOCAN.filter(r => r[4] > 0).sort((a, b) => (a[6]/a[4]) - (b[6]/b[4]));
-ch_tc_conv.setOption({
-  tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, formatter: p => `<b>${tc_conv[p[0].dataIndex][1]}</b><br/>支付成功率: ${p[0].value.toFixed(1)}%`},
-  grid: {left: 140, right: 40, top: 10, bottom: 30},
-  xAxis: {type: 'value', max: 100, axisLabel: {formatter: '{value}%'}},
-  yAxis: {type: 'category', data: tc_conv.map(r => r[1])},
-  series: [{type: 'bar', data: tc_conv.map(r => +(r[6]/r[4]*100).toFixed(1)), itemStyle: {color: '#6b6789'}, label: {show: true, position: 'right', formatter: p => p.value + '%'}}]
-});
 
-renderTable(document.getElementById('table-taocan'),
-  ['类型', '套餐', '点击', '下单', '成功', '购买金额', '实际收入', '点击→下单%', '下单→成功%'],
-  TAOCAN.map(r => [r[0], r[1], r[2], r[4], r[6], r[7], r[8], r[2] > 0 ? (r[4]/r[2]*100) : 0, r[4] > 0 ? (r[6]/r[4]*100) : 0]),
-  [null, null, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(1)+'%', v => v.toFixed(1)+'%']
-);
+function renderTaocan(period) {
+  const data = period === 30 ? TAOCAN_30D : TAOCAN;
+  document.getElementById('tc-range-label').textContent = `数据范围 近 ${period} 天`;
+
+  const sorted = data.slice().filter(r => r[8] > 0).sort((a, b) => a[8] - b[8]);
+  ch_tc_rev.setOption({
+    tooltip: {
+      trigger: 'axis', axisPointer: {type: 'shadow'},
+      formatter: p => {
+        const r = sorted[p[0].dataIndex];
+        return `<b>${r[1]}</b> (${r[0]})<br/>实际收入: ${fmt(r[8])} 元<br/>下单: ${fmt(r[4])}<br/>成功: ${fmt(r[6])}<br/>支付成功率: ${r[4] > 0 ? (r[6]/r[4]*100).toFixed(1) : '-'}%`;
+      }
+    },
+    grid: {left: 140, right: 20, top: 10, bottom: 30},
+    xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
+    yAxis: {type: 'category', data: sorted.map(r => r[1])},
+    series: [{
+      type: 'bar',
+      data: sorted.map(r => ({value: r[8], itemStyle: {color: r[0] === '金币套餐' ? '#1e5a87' : '#2d7a55'}})),
+      label: {show: true, position: 'right', formatter: p => fmt(p.value)}
+    }]
+  }, true);
+
+  const conv = data.filter(r => r[4] > 0).sort((a, b) => (a[6]/a[4]) - (b[6]/b[4]));
+  ch_tc_conv.setOption({
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, formatter: p => `<b>${conv[p[0].dataIndex][1]}</b><br/>支付成功率: ${p[0].value.toFixed(1)}%`},
+    grid: {left: 140, right: 40, top: 10, bottom: 30},
+    xAxis: {type: 'value', max: 100, axisLabel: {formatter: '{value}%'}},
+    yAxis: {type: 'category', data: conv.map(r => r[1])},
+    series: [{type: 'bar', data: conv.map(r => +(r[6]/r[4]*100).toFixed(1)), itemStyle: {color: '#6b6789'}, label: {show: true, position: 'right', formatter: p => p.value + '%'}}]
+  }, true);
+
+  renderTable(document.getElementById('table-taocan'),
+    ['类型', '套餐', '点击', '下单', '成功', '购买金额', '实际收入', '点击→下单%', '下单→成功%'],
+    data.map(r => [r[0], r[1], r[2], r[4], r[6], r[7], r[8], r[2] > 0 ? (r[4]/r[2]*100) : 0, r[4] > 0 ? (r[6]/r[4]*100) : 0]),
+    [null, null, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(1)+'%', v => v.toFixed(1)+'%']
+  );
+}
+renderTaocan(7);
 
 // ============== 渠道 ==============
 const ch_ch = echarts.init(document.getElementById('chart-channel'));
-const ch_sorted = CHANNEL.slice().sort((a, b) => a[4] - b[4]);
-ch_ch.setOption({
-  tooltip: {
-    trigger: 'axis', axisPointer: {type: 'shadow'},
-    formatter: p => {
-      const r = ch_sorted[p[0].dataIndex];
-      return `<b>${r[0]}</b><br/>充值: ${fmt(r[4])} 元<br/>注册: ${fmt(r[1])}<br/>日活: ${fmt(r[2])}<br/>充值人数: ${fmt(r[10])}<br/>ARPU: ${r[2] > 0 ? (r[4]/r[2]).toFixed(2) : '-'}<br/>ARPPU: ${r[10] > 0 ? (r[4]/r[10]).toFixed(2) : '-'}`;
-    }
-  },
-  grid: {left: 100, right: 30, top: 10, bottom: 30},
-  xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
-  yAxis: {type: 'category', data: ch_sorted.map(r => r[0])},
-  series: [{type: 'bar', data: ch_sorted.map(r => r[4]), itemStyle: {color: '#1e5a87'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
-});
 
-renderTable(document.getElementById('table-channel'),
-  ['渠道码', '注册', '日活', '下载', '充值', '消费G点', '充值人数', '付费率%', 'ARPU', 'ARPPU'],
-  CHANNEL.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[10], r[2] > 0 ? (r[10]/r[2]*100) : 0, r[2] > 0 ? (r[4]/r[2]) : 0, r[10] > 0 ? (r[4]/r[10]) : 0]),
-  [null, fmt, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(2)+'%', v => v.toFixed(2), v => v.toFixed(2)]
-);
+function renderChannel(period) {
+  const data = period === 30 ? CHANNEL_30D : CHANNEL;
+  document.getElementById('ch-range-label').textContent = `数据范围 近 ${period} 天`;
+
+  const sorted = data.slice().sort((a, b) => a[4] - b[4]);
+  ch_ch.setOption({
+    tooltip: {
+      trigger: 'axis', axisPointer: {type: 'shadow'},
+      formatter: p => {
+        const r = sorted[p[0].dataIndex];
+        return `<b>${r[0]}</b><br/>充值: ${fmt(r[4])} 元<br/>注册: ${fmt(r[1])}<br/>日活: ${fmt(r[2])}<br/>充值人数: ${fmt(r[10])}<br/>ARPU: ${r[2] > 0 ? (r[4]/r[2]).toFixed(2) : '-'}<br/>ARPPU: ${r[10] > 0 ? (r[4]/r[10]).toFixed(2) : '-'}`;
+      }
+    },
+    grid: {left: 100, right: 30, top: 10, bottom: 30},
+    xAxis: {type: 'value', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(0) + '万' : v}},
+    yAxis: {type: 'category', data: sorted.map(r => r[0])},
+    series: [{type: 'bar', data: sorted.map(r => r[4]), itemStyle: {color: '#1e5a87'}, label: {show: true, position: 'right', formatter: p => fmt(p.value)}}]
+  }, true);
+
+  renderTable(document.getElementById('table-channel'),
+    ['渠道码', '注册', '日活', '下载', '充值', '消费G点', '充值人数', '付费率%', 'ARPU', 'ARPPU'],
+    data.map(r => [r[0], r[1], r[2], r[3], r[4], r[5], r[10], r[2] > 0 ? (r[10]/r[2]*100) : 0, r[2] > 0 ? (r[4]/r[2]) : 0, r[10] > 0 ? (r[4]/r[10]) : 0]),
+    [null, fmt, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(2)+'%', v => v.toFixed(2), v => v.toFixed(2)]
+  );
+}
+renderChannel(7);
+
+// 绑定 4 个 tab 的 toggle 按钮
+document.querySelectorAll('.date-bar button[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    const period = parseInt(btn.dataset.period);
+    document.querySelectorAll(`.date-bar button[data-tab="${tab}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (tab === 'wangyou') renderWangyou(period);
+    else if (tab === 'danji') renderDanji(period);
+    else if (tab === 'taocan') renderTaocan(period);
+    else if (tab === 'channel') renderChannel(period);
+  });
+});
 
 // ============== LTV / 留存 ==============
 const ch_ltv = echarts.init(document.getElementById('chart-ltv'));
