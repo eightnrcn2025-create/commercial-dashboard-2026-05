@@ -1,197 +1,256 @@
 #!/usr/bin/env python3
 """
-每日扒商业化看板数据 - 自动更新 data.js + push GitHub Pages
-首次运行: 浏览器会弹出, 你手动登 admin1866, 之后会记住会话
-后续运行: 全自动, headless
+每日扒商业化看板数据 → 更新 data.js → push GitHub Pages
+自动登录：从 macOS 钥匙串读 用户名/密码/TOTP 种子
+扒数据：用点击 sidebar 菜单代替猜 URL，避免后台改路径就挂
 """
 import json
 import sys
 import subprocess
-from datetime import date, timedelta, datetime
+import re
+import time
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+import pyotp
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
 REPO = Path(__file__).parent
 PROFILE = Path.home() / '.dashboard-chrome-profile'
 ADMIN = 'http://18game.line.ccc:8001/admin1866'
 
-# 日期范围：抓昨日（含）往前 30 天
 today = date.today()
 yest = today - timedelta(days=1)
+d90 = yest - timedelta(days=89)   # DAILY 拉 90 天，支持月对月区间对比
 d30 = yest - timedelta(days=29)
 d7 = yest - timedelta(days=6)
 
 def fmt(d): return d.strftime('%Y-%m-%d')
 
-# 提取 iframe 表格的通用 JS
-EXTRACT_JS = """
-() => {
-  const f = document.querySelector('iframe');
-  if (!f || !f.contentDocument) return null;
-  const d = f.contentDocument;
-  const tbls = d.querySelectorAll('table');
-  if (tbls.length < 3) return null;
-  // 设置 3000/页
-  const opts = d.querySelectorAll('.layui-laypage-limits option');
-  for (const o of opts) {
-    if (o.value === '3000') {
-      const s = o.closest('select');
-      s.value = o.value;
-      s.dispatchEvent(new Event('change', {bubbles: true}));
-      break;
-    }
-  }
-  return 'pageSize set';
-}
-"""
+# =========== 钥匙串 + 登录 ===========
 
-GRAB_ROWS_JS = """
-() => {
-  const f = document.querySelector('iframe');
-  const d = f.contentDocument;
-  const tbl = d.querySelectorAll('table')[2];
-  const rows = [];
-  tbl.querySelectorAll('tr').forEach(r => {
-    const cells = Array.from(r.querySelectorAll('td')).map(c => c.innerText.trim());
-    if (cells.length) rows.push(cells);
-  });
-  return rows;
-}
-"""
+def get_keychain(service):
+    return subprocess.check_output(
+        ['security', 'find-generic-password', '-s', service, '-w']
+    ).decode().strip()
 
-def headless_mode():
-    """First run: visible browser for login. Subsequent: headless."""
-    return PROFILE.exists() and any(PROFILE.iterdir()) if PROFILE.exists() else False
 
-def fetch_one(page, path, start=None, end=None, search_btn_text='搜索'):
-    """Navigate to a report page, optionally set date range, search, then return iframe rows."""
-    url = f'{ADMIN}{path}'
-    page.goto(url, wait_until='networkidle')
-    page.wait_for_selector('iframe', timeout=20000)
-    # wait for iframe ready
-    page.wait_for_function('() => { const f = document.querySelector("iframe"); return f && f.contentDocument && f.contentDocument.querySelectorAll("table").length > 1; }', timeout=20000)
+def is_logged_in(page):
+    """看 sidebar 是否存在判断是否登录成功"""
+    try:
+        page.wait_for_selector('a:has-text("系统统计"), .layui-nav, ul.layui-nav-tree', timeout=3000, state='attached')
+        return True
+    except PWTimeout:
+        return False
 
-    if start and end:
-        # set date inputs inside the page (date inputs are in main page, not iframe)
-        # they may differ per page; we try common selectors
+def auto_login(page):
+    # 直接走登录页，避免根路径 301 引发的 ERR_EMPTY_RESPONSE
+    print('  [login] 走登录流程...', flush=True)
+    for attempt in range(3):
         try:
-            inputs = page.locator('input[type="text"]').all()
-            for i, inp in enumerate(inputs):
-                if 'yyyy-mm-dd' in (inp.get_attribute('placeholder') or '').lower() or 'yyyy-MM-dd' in (inp.get_attribute('placeholder') or ''):
-                    pass  # 暂用更简单方案：用 query string 直接传
-            # 多数页支持 ?startTime=&endTime=
-            page.goto(f'{url}?startTime={start}&endTime={end}', wait_until='networkidle')
-            page.wait_for_selector('iframe', timeout=20000)
-            page.wait_for_timeout(2000)
+            page.goto(f'{ADMIN}/login', wait_until='domcontentloaded', timeout=30000)
+            break
         except Exception as e:
-            print(f'[warn] date filter failed: {e}', file=sys.stderr)
+            if attempt == 2: raise
+            print(f'  [login] 重试 {attempt+1}/3...', flush=True)
+            time.sleep(3)
+    page.wait_for_selector('input[placeholder="请输入登录账号"]', timeout=10000)
 
-    # set page size to 3000
-    page.evaluate(EXTRACT_JS)
-    page.wait_for_timeout(2500)
-    return page.evaluate(GRAB_ROWS_JS)
+    username = get_keychain('admin1866-username')
+    password = get_keychain('admin1866-password')
+    seed = get_keychain('admin1866-totp-seed')
+    code = pyotp.TOTP(seed).now()
+    print(f'  [login] 用 username={username[:2]}***, TOTP={code[:2]}****', flush=True)
 
+    page.fill('input[placeholder="请输入登录账号"]', username)
+    page.fill('input[placeholder="请输入登录密码"]', password)
+    page.fill('input[placeholder="请输入谷歌验证码"]', code)
+    page.click('button:has-text("登录")')
+
+    # 等跳转完，再检查是否登录成功
+    page.wait_for_timeout(3000)
+    if not is_logged_in(page):
+        # 拿登录页可能的错误提示
+        err = page.evaluate('() => document.body.innerText.slice(0, 300)')
+        raise RuntimeError(f'登录失败，页面内容: {err!r}')
+    print('  [login] ✓ 登录成功', flush=True)
+
+# =========== 菜单导航 + 数据抓取 ===========
+
+# 真实报表 URL（从 sidebar 的 lay-href 扒出来的）
+REPORT_URLS = {
+    '系统统计-报表':     '/admin1866/system/reportTotalDayLog',
+    '套餐统计':         '/admin1866/system/combo',
+    '游戏统计':         '/admin1866/system/game',
+    '渠道统计':         '/admin1866/system/channel',
+    '网络游戏运营统计':   '/admin1866/system/networkGame',
+    '网络游戏注册LTV表': '/admin1866/system/gameLtv',
+    '网络游戏注册留存':   '/admin1866/system/gameRetention',
+}
+
+def go_to_report(page, report_name):
+    """主 page 直接 navigate 到报表 URL（layui 渲染表格在 .layui-table-view 里）"""
+    path = REPORT_URLS[report_name]
+    url = f'http://18game.line.ccc:8001{path}'
+    page.goto(url, wait_until='domcontentloaded')
+    # layui 表格异步渲染：等带数据的 tbody 出现
+    page.wait_for_function(
+        '() => document.querySelectorAll(".layui-table-body tbody tr, .layui-table tbody tr").length > 0 || document.querySelector(".layui-none, .layui-table-view")',
+        timeout=20000
+    )
+    page.wait_for_timeout(1200)
+
+def set_date_range_and_search(page, start, end):
+    page.evaluate(f"""
+    () => {{
+      const inputs = document.querySelectorAll('input[placeholder*="yyyy"], input.layui-input');
+      let dateInputs = [];
+      inputs.forEach(i => {{
+        const ph = (i.placeholder || '').toLowerCase();
+        if (ph.includes('yyyy') || ph.includes('日期') || /^\\d{{4}}-\\d{{2}}-\\d{{2}}$/.test(i.value)) {{
+          dateInputs.push(i);
+        }}
+      }});
+      if (dateInputs.length >= 2) {{
+        dateInputs[0].value = '{start}';
+        dateInputs[1].value = '{end}';
+        ['input', 'change', 'blur'].forEach(ev => {{
+          dateInputs[0].dispatchEvent(new Event(ev, {{bubbles: true}}));
+          dateInputs[1].dispatchEvent(new Event(ev, {{bubbles: true}}));
+        }});
+      }}
+      const btns = document.querySelectorAll('button');
+      for (const b of btns) {{
+        if ((b.innerText || '').trim() === '搜索') {{ b.click(); return; }}
+      }}
+    }}
+    """)
+    page.wait_for_timeout(3500)
+
+def set_page_size_3000(page):
+    page.evaluate("""
+    () => {
+      const opts = document.querySelectorAll('.layui-laypage-limits option, select option');
+      for (const o of opts) {
+        if (o.value === '3000') {
+          const s = o.closest('select');
+          if (s) {
+            s.value = o.value;
+            s.dispatchEvent(new Event('change', {bubbles: true}));
+            return;
+          }
+        }
+      }
+    }
+    """)
+    page.wait_for_timeout(3500)
+
+def grab_rows(page):
+    return page.evaluate("""
+    () => {
+      const tbls = document.querySelectorAll('table');
+      let best = null, maxRows = 0;
+      tbls.forEach(t => {
+        const n = t.querySelectorAll('tbody tr').length;
+        if (n > maxRows) { maxRows = n; best = t; }
+      });
+      if (!best) return [];
+      const rows = [];
+      best.querySelectorAll('tbody tr').forEach(r => {
+        const cells = Array.from(r.querySelectorAll('td')).map(c => c.innerText.trim());
+        if (cells.length) rows.push(cells);
+      });
+      return rows;
+    }
+    """)
+
+def fetch_report(page, label, report_name, start, end):
+    print(f'[{label}] {fmt(start)} ~ {fmt(end)} -> {report_name}', flush=True)
+    go_to_report(page, report_name)
+    set_date_range_and_search(page, fmt(start), fmt(end))
+    set_page_size_3000(page)
+    rows = grab_rows(page)
+    print(f'      ✓ {len(rows)} 行', flush=True)
+    return rows
+
+# =========== 主流程 ===========
 
 def main():
-    is_first_run = not (PROFILE.exists() and (PROFILE / 'Default').exists())
+    PROFILE.mkdir(exist_ok=True)
 
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(
             user_data_dir=str(PROFILE),
-            headless=not is_first_run,
+            headless=True,
             args=['--no-sandbox', '--disable-blink-features=AutomationControlled'],
-            viewport={'width': 1440, 'height': 800},
+            viewport={'width': 1440, 'height': 900},
             ignore_https_errors=True,
+            http_credentials={
+                'username': get_keychain('admin1866-basic-user'),
+                'password': get_keychain('admin1866-basic-pass'),
+            },
         )
         page = ctx.new_page()
-        page.set_default_timeout(60000)
+        page.set_default_timeout(45000)
 
-        # check login
-        page.goto(ADMIN, wait_until='networkidle')
-        url = page.url
-        if 'login' in url.lower() or 'signin' in url.lower():
-            if is_first_run:
-                print('=' * 60)
-                print('首次运行：请在弹出的浏览器里手动登录 admin1866')
-                print('登录成功后按 ENTER 继续...')
-                print('=' * 60)
-                input()
-            else:
-                print('ERROR: 会话过期。请运行: rm -rf ~/.dashboard-chrome-profile && python3 update_data.py', file=sys.stderr)
-                return 2
+        try:
+            auto_login(page)
+        except Exception as e:
+            print(f'ERROR: 登录失败 - {e}', file=sys.stderr)
+            ctx.close()
+            return 2
 
-        # ============ 1. 系统统计-报表 30天 ============
-        print(f'[1/7] 系统统计-报表 ({fmt(d30)} ~ {fmt(yest)})...')
-        daily_rows = fetch_one(page, '/system/reportTotalDayLog', fmt(d30), fmt(yest))
-        DAILY = [[r[0]] + [_num(x) for x in r[1:13]] for r in daily_rows if len(r) >= 13]
-        DAILY.sort(key=lambda r: r[0], reverse=True)  # 5/27 → 4/28
-        print(f'      ✓ {len(DAILY)} 行')
+        try:
+            daily = fetch_report(page, '1/7', '系统统计-报表', d90, yest)
+            DAILY = [[r[0]] + [_num(x) for x in r[1:13]] for r in daily if len(r) >= 13]
+            DAILY.sort(key=lambda r: r[0], reverse=True)
 
-        # ============ 2. 套餐统计 7天 ============
-        print(f'[2/7] 套餐统计 ({fmt(d7)} ~ {fmt(yest)})...')
-        tc_rows = fetch_one(page, '/system/getPackageStat', fmt(d7), fmt(yest))
-        TAOCAN = aggregate_taocan(tc_rows)
-        print(f'      ✓ {len(TAOCAN)} 套餐')
+            tc = fetch_report(page, '2/7', '套餐统计', d7, yest)
+            TAOCAN = aggregate_taocan(tc)
 
-        # ============ 3. 网络游戏运营统计 - 取网游清单 ============
-        print(f'[3/7] 网游清单 ({fmt(d7)} ~ {fmt(yest)})...')
-        ny_rows = fetch_one(page, '/system/networkGameOperation', fmt(d7), fmt(yest))
-        NETWORK_GAME_IDS = extract_ids(ny_rows, col=2)
-        print(f'      ✓ {len(NETWORK_GAME_IDS)} 个网游')
+            ny = fetch_report(page, '3/7', '网络游戏运营统计', d7, yest)
+            NGIDS = extract_ids(ny, col=2)
+            print(f'      ✓ 识别出 {len(NGIDS)} 个网游', flush=True)
 
-        # ============ 4. 游戏统计 7天 - 拆网游/单机 ============
-        print(f'[4/7] 游戏统计 ({fmt(d7)} ~ {fmt(yest)})...')
-        g_rows = fetch_one(page, '/system/gameStat', fmt(d7), fmt(yest))
-        WANGYOU, DANJI = aggregate_games(g_rows, NETWORK_GAME_IDS)
-        print(f'      ✓ 网游 {len(WANGYOU)} / 单机 {len(DANJI)}')
+            g = fetch_report(page, '4/7', '游戏统计', d7, yest)
+            WANGYOU, DANJI = aggregate_games(g, NGIDS)
 
-        # ============ 5. 渠道统计 7天 ============
-        print(f'[5/7] 渠道统计 ({fmt(d7)} ~ {fmt(yest)})...')
-        ch_rows = fetch_one(page, '/system/channelStat', fmt(d7), fmt(yest))
-        CHANNEL = aggregate_channel(ch_rows)
-        print(f'      ✓ {len(CHANNEL)} 渠道')
+            ch = fetch_report(page, '5/7', '渠道统计', d7, yest)
+            CHANNEL = aggregate_channel(ch)
 
-        # ============ 6. 网游 LTV 30天 ============
-        print(f'[6/7] 网游LTV ({fmt(d30)} ~ {fmt(yest)})...')
-        ltv_rows = fetch_one(page, '/system/networkGameLTV', fmt(d30), fmt(yest))
-        LTV = aggregate_ltv(ltv_rows)
-        print(f'      ✓ {len(LTV)} 天')
+            ltv = fetch_report(page, '6/7', '网络游戏注册LTV表', d30, yest)
+            LTV = aggregate_ltv(ltv)
 
-        # ============ 7. 网游留存 30天 ============
-        print(f'[7/7] 网游留存 ({fmt(d30)} ~ {fmt(yest)})...')
-        ret_rows = fetch_one(page, '/system/networkGameRetention', fmt(d30), fmt(yest))
-        RETENTION = aggregate_retention(ret_rows)
-        print(f'      ✓ {len(RETENTION)} 天')
+            ret = fetch_report(page, '7/7', '网络游戏注册留存', d30, yest)
+            RETENTION = aggregate_retention(ret)
+        except Exception as e:
+            print(f'ERROR: 扒数据失败 - {type(e).__name__}: {e}', file=sys.stderr)
+            import traceback; traceback.print_exc(file=sys.stderr)
+            ctx.close()
+            return 3
 
         ctx.close()
 
-    # ============ 写 data.js ============
     write_data_js(REPO / 'data.js', DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION)
-    print(f'✓ data.js 已更新')
+    print('✓ data.js 已更新', flush=True)
 
-    # ============ 推 GitHub ============
     if push_github(REPO):
-        print('✓ 已推送 GitHub，Pages 1 分钟后更新')
+        print('✓ 已推送 GitHub', flush=True)
     else:
-        print('⚠️ 推送 GitHub 失败，请手动检查')
-
+        print('⚠️ 推送 GitHub 失败 (可能没改动或网络问题)', flush=True)
     return 0
 
-
-# ============ 工具函数 ============
+# =========== 工具函数 ===========
 
 def _num(s):
-    """字符串 → 数字，失败返回 0"""
     try:
-        if '.' in s: return float(s)
-        return int(s)
+        s = str(s).replace(',', '').replace('%', '').strip()
+        if not s or s == '-': return 0
+        return float(s) if '.' in s else int(s)
     except (ValueError, TypeError):
         return 0
 
 def extract_ids(rows, col):
-    """从 '名称（123）' 提取 ID 列表"""
-    import re
     ids = set()
     for r in rows:
         if len(r) > col:
@@ -200,25 +259,22 @@ def extract_ids(rows, col):
     return ids
 
 def aggregate_games(rows, network_ids):
-    """游戏统计 → 拆网游/单机 聚合"""
-    import re
     agg = {}
     for r in rows:
         if len(r) < 14: continue
         k = r[1]
-        if k == '-': continue
+        if k == '-' or not k: continue
         if k not in agg: agg[k] = [k] + [0]*10
-        # cols: 0日期 1游戏 2注册 3日活 4次日 5下载 6充值人数 7充值额 8退款 9消费G点 10注册付费人 11注册付费额 12留存付费人 13留存付费额
-        agg[k][1] += _num(r[2])   # 注册
-        agg[k][2] += _num(r[3])   # 日活
-        agg[k][3] += _num(r[5])   # 下载
-        agg[k][4] += _num(r[7])   # 充值额
-        agg[k][5] += _num(r[9])   # 消费G点
-        agg[k][6] += _num(r[10])  # 注册付费人数
-        agg[k][7] += _num(r[11])  # 注册付费金额
-        agg[k][8] += _num(r[12])  # 留存付费人数
-        agg[k][9] += _num(r[13])  # 留存付费金额
-        agg[k][10] += _num(r[6])  # 充值人数
+        agg[k][1] += _num(r[2])
+        agg[k][2] += _num(r[3])
+        agg[k][3] += _num(r[5])
+        agg[k][4] += _num(r[7])
+        agg[k][5] += _num(r[9])
+        agg[k][6] += _num(r[10])
+        agg[k][7] += _num(r[11])
+        agg[k][8] += _num(r[12])
+        agg[k][9] += _num(r[13])
+        agg[k][10] += _num(r[6])
     wy, dj = [], []
     for r in agg.values():
         m = re.search(r'[\(（](\d+)[\)）]\s*$', r[0])
@@ -226,36 +282,33 @@ def aggregate_games(rows, network_ids):
         if gid and gid in network_ids:
             wy.append(r)
         else:
-            # 单机：只取下载量/消费G点
             dj.append([r[0], r[3], r[5], 0, 0])
     wy.sort(key=lambda x: -x[4])
     dj.sort(key=lambda x: -x[2])
     return wy, dj[:20]
 
 def aggregate_taocan(rows):
-    """套餐统计聚合"""
     agg = {}
     for r in rows:
         if len(r) < 14: continue
         k = (r[1], r[2])
         if k not in agg: agg[k] = [r[1], r[2], 0, 0, 0, 0, 0, 0, 0]
-        agg[k][2] += _num(r[3])   # 点击次数
-        agg[k][3] += _num(r[4])   # 点击人数
-        agg[k][4] += _num(r[6])   # 下单次数
-        agg[k][5] += _num(r[7])   # 下单人数
-        agg[k][6] += _num(r[9])   # 成功次数
-        agg[k][7] += _num(r[11])  # 购买金额
-        agg[k][8] += _num(r[13])  # 实际收入
+        agg[k][2] += _num(r[3])
+        agg[k][3] += _num(r[4])
+        agg[k][4] += _num(r[6])
+        agg[k][5] += _num(r[7])
+        agg[k][6] += _num(r[9])
+        agg[k][7] += _num(r[11])
+        agg[k][8] += _num(r[13])
     out = [r for r in agg.values() if r[7] > 0]
     out.sort(key=lambda x: -x[7])
     return out
 
 def aggregate_channel(rows):
-    """渠道统计聚合"""
     agg = {}
     for r in rows:
         if len(r) < 14: continue
-        if r[0] == '合计': continue
+        if r[0] == '合计' or not r[1]: continue
         k = r[1]
         if k not in agg: agg[k] = [k] + [0]*10
         agg[k][1] += _num(r[2])
@@ -273,7 +326,6 @@ def aggregate_channel(rows):
     return out
 
 def aggregate_ltv(rows):
-    """LTV 按注册日聚合"""
     agg = {}
     for r in rows:
         if len(r) < 12: continue
@@ -293,7 +345,6 @@ def aggregate_ltv(rows):
     return out
 
 def aggregate_retention(rows):
-    """留存率按注册日聚合"""
     agg = {}
     for r in rows:
         if len(r) < 12: continue
@@ -314,7 +365,7 @@ def aggregate_retention(rows):
     return out
 
 def write_data_js(path, DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION):
-    snapshot = datetime.now().strftime('%Y-%m-%d %H:%M')
+    snapshot = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     js = f"""// 自动生成 {snapshot} · 数据源：admin1866 后台
 
 const SNAPSHOT_AT = "{snapshot}";
@@ -340,15 +391,18 @@ def push_github(repo):
         subprocess.run(['git', '-C', str(repo), 'add', 'data.js'], check=True, capture_output=True)
         r = subprocess.run(['git', '-C', str(repo), 'diff', '--cached', '--quiet'], capture_output=True)
         if r.returncode == 0:
-            print('  (data 无变化，跳过提交)')
+            print('  (data 无变化，跳过提交)', flush=True)
             return True
-        msg = f'auto: 数据更新 {datetime.now().strftime("%Y-%m-%d")}'
+        msg = f'auto: 数据更新 {datetime.now().strftime("%Y-%m-%d %H:%M")}'
         subprocess.run(['git', '-C', str(repo), '-c', 'user.name=eight', '-c', 'user.email=linnn.w14@gmail.com',
                        'commit', '-m', msg], check=True, capture_output=True)
-        subprocess.run(['git', '-C', str(repo), 'push'], check=True, capture_output=True)
+        subprocess.run(['git', '-C', str(repo), 'push'], check=True, capture_output=True, timeout=60)
         return True
     except subprocess.CalledProcessError as e:
         print(f'git error: {e.stderr.decode() if e.stderr else e}', file=sys.stderr)
+        return False
+    except Exception as e:
+        print(f'push error: {e}', file=sys.stderr)
         return False
 
 

@@ -170,8 +170,144 @@ document.querySelectorAll('.date-bar button[data-shift]').forEach(btn => {
 // 初始化为最新日
 renderDayKPI(DATE_MAX);
 
+// ============== 自由区间对比 ==============
+const RANGE_METRICS = [
+  {name: '日活', tag: 'DAU 日均', col: 1, agg: 'avg', fmt: v => fmt(Math.round(v))},
+  {name: '注册', tag: 'NEW REG', col: 2, agg: 'sum', fmt},
+  {name: '下载', tag: 'DOWNLOADS', col: 3, agg: 'sum', fmt},
+  {name: '充值（元）', tag: 'GMV', col: 4, agg: 'sum', fmt},
+  {name: '消费G点', tag: 'G POINTS', col: 6, agg: 'sum', fmt},
+  {name: '注册付费人数', tag: 'NEW PAYERS', col: 7, agg: 'sum', fmt},
+  {name: '注册付费金额', tag: 'NEW REVENUE', col: 8, agg: 'sum', fmt},
+  {name: '留存付费金额', tag: 'OLD REVENUE', col: 10, agg: 'sum', fmt},
+  {name: '总下单', tag: 'ORDERS', col: 11, agg: 'sum', fmt},
+  {name: '有效订单', tag: 'PAID ORDERS', col: 12, agg: 'sum', fmt},
+  {name: 'ARPU', tag: 'ARPU', agg: 'calc',
+    fn: rows => { let amt=0,uv=0; rows.forEach(r=>{amt+=r[4];uv+=r[1];}); return uv>0?amt/uv:0; },
+    fmt: v => v.toFixed(2)},
+  {name: '客单价', tag: 'AOV', agg: 'calc',
+    fn: rows => { let amt=0,ord=0; rows.forEach(r=>{amt+=r[4];ord+=r[11];}); return ord>0?amt/ord:0; },
+    fmt: v => v.toFixed(2)},
+];
+
+function rangeRows(fromStr, toStr) {
+  return DAILY.filter(r => r[0] >= fromStr && r[0] <= toStr);
+}
+function rangeStats(fromStr, toStr) {
+  const rows = rangeRows(fromStr, toStr);
+  const out = {};
+  RANGE_METRICS.forEach(m => {
+    if (!rows.length) { out[m.name] = 0; return; }
+    if (m.agg === 'sum') out[m.name] = rows.reduce((s, r) => s + r[m.col], 0);
+    else if (m.agg === 'avg') out[m.name] = rows.reduce((s, r) => s + r[m.col], 0) / rows.length;
+    else if (m.agg === 'calc') out[m.name] = m.fn(rows);
+  });
+  return {stats: out, days: rows.length};
+}
+
+function renderRangeComparison() {
+  const r1from = document.getElementById('r1-from').value;
+  const r1to = document.getElementById('r1-to').value;
+  const r2from = document.getElementById('r2-from').value;
+  const r2to = document.getElementById('r2-to').value;
+
+  const info = document.getElementById('range-info');
+  const grid = document.getElementById('range-kpi-grid');
+
+  if (!r1from || !r1to || !r2from || !r2to) {
+    info.innerHTML = '请选择两段日期';
+    grid.innerHTML = '';
+    return;
+  }
+
+  const a = rangeStats(r1from, r1to);
+  const b = rangeStats(r2from, r2to);
+
+  info.innerHTML = `<b>本期</b> ${r1from} → ${r1to}（${a.days} 天） &nbsp;<span style="color:var(--gold);font-weight:600;">VS</span>&nbsp; <span class="b-period"><b>对比期</b> ${r2from} → ${r2to}（${b.days} 天）</span>`;
+
+  if (a.days === 0 || b.days === 0) {
+    grid.innerHTML = `<div style="padding:14px;color:var(--text-3);font-size:13px;">⚠️ 数据范围 ${DATE_MIN} ~ ${DATE_MAX}，所选区间无数据</div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  RANGE_METRICS.forEach(m => {
+    const v1 = a.stats[m.name];
+    const v2 = b.stats[m.name];
+    const diff = v1 - v2;
+    const pct = v2 !== 0 ? (diff / v2 * 100) : 0;
+    const arrow = diff > 0.001 ? '↑' : (diff < -0.001 ? '↓' : '─');
+    const cls = diff > 0.001 ? 'delta-up' : (diff < -0.001 ? 'delta-down' : 'delta-neutral');
+    const card = document.createElement('div');
+    card.className = 'range-card';
+    const sign = diff > 0 ? '+' : (diff < 0 ? '-' : '');
+    card.innerHTML = `
+      <div class="label">${m.tag} · ${m.name}</div>
+      <div class="primary">${m.fmt(v1)}</div>
+      <div class="secondary"><span class="lbl">vs</span> ${m.fmt(v2)}</div>
+      <div class="delta ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% (${sign}${m.fmt(Math.abs(diff))})</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function applyRangePreset(days) {
+  // 本期：DATE_MAX 往前 days 天；对比期：再往前 days 天
+  const aTo = DATE_MAX;
+  const aFrom = shiftDate(DATE_MAX, -(days - 1));
+  const bTo = shiftDate(aFrom, -1);
+  const bFrom = shiftDate(bTo, -(days - 1));
+
+  // 检查是否超出数据范围
+  if (bFrom < DATE_MIN) {
+    alert(`数据范围只有 ${DATE_MIN} ~ ${DATE_MAX}（${Math.round((new Date(DATE_MAX) - new Date(DATE_MIN))/86400000)+1} 天），"近${days}天 vs 上${days}天"需要 ${days*2} 天数据。\n\n等 launchd 自动扒几次后会有足够数据。`);
+    return;
+  }
+
+  document.getElementById('r1-from').value = aFrom;
+  document.getElementById('r1-to').value = aTo;
+  document.getElementById('r2-from').value = bFrom;
+  document.getElementById('r2-to').value = bTo;
+  renderRangeComparison();
+}
+
+// 绑定事件
+['r1-from','r1-to','r2-from','r2-to'].forEach(id => {
+  const el = document.getElementById(id);
+  el.min = DATE_MIN;
+  el.max = DATE_MAX;
+  el.addEventListener('change', () => {
+    document.querySelectorAll('.range-presets button').forEach(b => b.classList.remove('active'));
+    renderRangeComparison();
+  });
+});
+
+document.querySelectorAll('.range-presets button').forEach(btn => {
+  const days = parseInt(btn.dataset.preset);
+  // 数据不够就 disable
+  const totalDays = Math.round((new Date(DATE_MAX) - new Date(DATE_MIN))/86400000) + 1;
+  if (totalDays < days * 2) {
+    btn.disabled = true;
+    btn.title = `需要 ${days*2} 天数据，现有 ${totalDays} 天`;
+  }
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-presets button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyRangePreset(days);
+  });
+});
+
+// 默认显示"近7天 vs 上7天"（如果数据够）
+(function initRange() {
+  const totalDays = Math.round((new Date(DATE_MAX) - new Date(DATE_MIN))/86400000) + 1;
+  if (totalDays >= 14) {
+    document.querySelector('.range-presets button[data-preset="7"]').click();
+  } else {
+    renderRangeComparison();
+  }
+})();
+
 // ============== 总览 ==============
-const co_compare = echarts.init(document.getElementById('chart-overview-compare'));
 const last30 = DAILY.slice().reverse(); // 4/28 → 5/27 order
 
 // 算昨日 / 近7天 / 近30天 几个核心
@@ -180,28 +316,6 @@ const sum7 = idx => DAILY.slice(0, 7).reduce((s, r) => s + r[idx], 0);
 const sum30 = idx => DAILY.reduce((s, r) => s + r[idx], 0);
 const avg7 = idx => sum7(idx) / 7;
 const avg30 = idx => sum30(idx) / 30;
-
-const compareMetrics = [
-  ['注册', 2, yest[2], sum7(2), sum30(2), 'sum'],
-  ['充值（元）', 4, yest[4], sum7(4), sum30(4), 'sum'],
-  ['消费G点', 6, yest[6], sum7(6), sum30(6), 'sum'],
-  ['日活', 1, yest[1], avg7(1), avg30(1), 'avg'],
-  ['总下单数', 11, yest[11], sum7(11), sum30(11), 'sum'],
-  ['注册付费人数', 7, yest[7], sum7(7), sum30(7), 'sum']
-];
-
-co_compare.setOption({
-  tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}},
-  legend: {data: ['昨日（5/27）', '近 7 天合计', '近 30 天合计'], top: 0},
-  grid: {left: 60, right: 20, top: 50, bottom: 30},
-  xAxis: {type: 'category', data: compareMetrics.map(m => m[0])},
-  yAxis: [{type: 'value', name: '数值', axisLabel: {formatter: v => v >= 10000 ? (v/10000).toFixed(1) + '万' : v}}],
-  series: [
-    {name: '昨日（5/27）', type: 'bar', data: compareMetrics.map(m => m[2]), itemStyle: {color: '#1e5a87'}},
-    {name: '近 7 天合计', type: 'bar', data: compareMetrics.map(m => Math.round(m[3])), itemStyle: {color: '#4a7da5'}},
-    {name: '近 30 天合计', type: 'bar', data: compareMetrics.map(m => Math.round(m[4])), itemStyle: {color: '#a8bcca'}}
-  ]
-});
 
 // 新 vs 留存付费金额占比（近30天）
 const newPay30 = sum30(8), oldPay30 = sum30(10);
@@ -415,5 +529,5 @@ ch_ret.setOption({
 
 // 窗口 resize
 window.addEventListener('resize', () => {
-  [co_compare, co_pie, co_success, tr_main, ch_wy, ch_dj, ch_tc_rev, ch_tc_conv, ch_ch, ch_ltv, ch_ret].forEach(c => c && c.resize());
+  [co_pie, co_success, tr_main, ch_wy, ch_dj, ch_tc_rev, ch_tc_conv, ch_ch, ch_ltv, ch_ret].forEach(c => c && c.resize());
 });
