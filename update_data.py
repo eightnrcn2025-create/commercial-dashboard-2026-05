@@ -262,8 +262,19 @@ def main():
     # 与已有归档合并，避免后台滚动删除丢历史
     DAILY, LTV, RETENTION = archive_merge(REPO / 'data.js', DAILY, LTV, RETENTION)
 
+    # 原始日级数据（30 天窗口），前端用来按自定义区间聚合
+    # 字段（游戏统计）：[日期, 游戏id, 注册, 日活, 次日日活, 下载, 充值人数, 充值金额, 投诉扣款, 消费G点, 注册付费人数, 注册付费金额, 留存付费人数, 留存付费金额]
+    GAMES_DAILY = [r for r in g30 if len(r) >= 14 and any(_num(x) > 0 for x in r[2:14])]
+    # 字段（套餐统计）：[日期, 类型, 名称, 点击次数, 点击人数, 人均点击, 下单次数, 下单人数, 下单转化率, 成功次数, 支付成功率, 购买金额, 平均客单价, 实际收入]
+    TAOCAN_DAILY = [r for r in tc30 if len(r) >= 14 and any(_num(x) > 0 for x in r[3:14])]
+    # 字段（渠道统计）：同游戏统计
+    CHANNEL_DAILY = [r for r in ch30 if len(r) >= 14 and any(_num(x) > 0 for x in r[2:14])]
+    # 网游 ID 列表用于前端区分网游/单机
+    NETWORK_GAME_IDS = sorted(NGIDS_30D)
+
     write_data_js(REPO / 'data.js', DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION,
-                  WANGYOU_30D, DANJI_30D, TAOCAN_30D, CHANNEL_30D)
+                  WANGYOU_30D, DANJI_30D, TAOCAN_30D, CHANNEL_30D,
+                  GAMES_DAILY, TAOCAN_DAILY, CHANNEL_DAILY, NETWORK_GAME_IDS)
     print('✓ data.js 已更新', flush=True)
 
     if push_github(REPO):
@@ -437,7 +448,9 @@ def archive_merge(path, DAILY, LTV, RETENTION):
     return merged_d, merged_l, merged_r
 
 def write_data_js(path, DAILY, WANGYOU, DANJI, TAOCAN, CHANNEL, LTV, RETENTION,
-                  WANGYOU_30D=None, DANJI_30D=None, TAOCAN_30D=None, CHANNEL_30D=None):
+                  WANGYOU_30D=None, DANJI_30D=None, TAOCAN_30D=None, CHANNEL_30D=None,
+                  GAMES_DAILY=None, TAOCAN_DAILY=None, CHANNEL_DAILY=None,
+                  NETWORK_GAME_IDS=None):
     snapshot = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     js = f"""// 自动生成 {snapshot} · 数据源：admin1866 后台
 
@@ -456,6 +469,12 @@ const TAOCAN_30D = {json.dumps(TAOCAN_30D or TAOCAN, ensure_ascii=False)};
 
 const CHANNEL = {json.dumps(CHANNEL, ensure_ascii=False)};
 const CHANNEL_30D = {json.dumps(CHANNEL_30D or CHANNEL, ensure_ascii=False)};
+
+// 原始日级数据（30天窗口）—— 前端用来按自定义区间聚合
+const GAMES_DAILY = {json.dumps(GAMES_DAILY or [], ensure_ascii=False)};
+const TAOCAN_DAILY = {json.dumps(TAOCAN_DAILY or [], ensure_ascii=False)};
+const CHANNEL_DAILY = {json.dumps(CHANNEL_DAILY or [], ensure_ascii=False)};
+const NETWORK_GAME_IDS = {json.dumps(list(NETWORK_GAME_IDS) if NETWORK_GAME_IDS else [], ensure_ascii=False)};
 
 const LTV = {json.dumps(LTV, ensure_ascii=False)};
 

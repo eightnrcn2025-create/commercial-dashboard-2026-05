@@ -405,21 +405,112 @@ renderTable(document.getElementById('table-trend'),
   [null, fmt, fmt, fmt, fmt, fmt, fmt, fmt, fmt, fmt, fmt, v => v.toFixed(2)]
 );
 
+// ============== 客户端聚合：用 GAMES_DAILY/TAOCAN_DAILY/CHANNEL_DAILY 按自定义区间汇总 ==============
+const NET_ID_SET = new Set((typeof NETWORK_GAME_IDS !== 'undefined' ? NETWORK_GAME_IDS : []).map(String));
+
+function extractGameId(nameStr) {
+  const m = nameStr && nameStr.match(/[\(（](\d+)[\)）]\s*$/);
+  return m ? m[1] : null;
+}
+
+function aggGamesByRange(fromStr, toStr) {
+  const filtered = GAMES_DAILY.filter(r => r[0] >= fromStr && r[0] <= toStr);
+  const agg = {};
+  filtered.forEach(r => {
+    const key = r[1];
+    if (key === '-' || !key) return;
+    if (!agg[key]) agg[key] = [key, 0,0,0,0,0,0,0,0,0,0];
+    agg[key][1] += +r[2] || 0;   // 注册
+    agg[key][2] += +r[3] || 0;   // 日活
+    agg[key][3] += +r[5] || 0;   // 下载
+    agg[key][4] += +r[7] || 0;   // 充值金额
+    agg[key][5] += +r[9] || 0;   // 消费G点
+    agg[key][6] += +r[10] || 0;  // 注册付费人数
+    agg[key][7] += +r[11] || 0;  // 注册付费金额
+    agg[key][8] += +r[12] || 0;  // 留存付费人数
+    agg[key][9] += +r[13] || 0;  // 留存付费金额
+    agg[key][10] += +r[6] || 0;  // 充值人数
+  });
+  const wy = [], dj = [];
+  Object.values(agg).forEach(r => {
+    const id = extractGameId(r[0]);
+    if (id && NET_ID_SET.has(id)) wy.push(r);
+    else dj.push([r[0], r[3], r[5], 0, 0]);
+  });
+  wy.sort((a, b) => b[4] - a[4]);
+  dj.sort((a, b) => b[2] - a[2]);
+  return {wy, dj: dj.slice(0, 20)};
+}
+
+function aggTaocanByRange(fromStr, toStr) {
+  const filtered = TAOCAN_DAILY.filter(r => r[0] >= fromStr && r[0] <= toStr);
+  const agg = {};
+  filtered.forEach(r => {
+    const k = r[1] + '|' + r[2];
+    if (!agg[k]) agg[k] = [r[1], r[2], 0,0,0,0,0,0,0];
+    agg[k][2] += +r[3] || 0;
+    agg[k][3] += +r[4] || 0;
+    agg[k][4] += +r[6] || 0;
+    agg[k][5] += +r[7] || 0;
+    agg[k][6] += +r[9] || 0;
+    agg[k][7] += +r[11] || 0;
+    agg[k][8] += +r[13] || 0;
+  });
+  const out = Object.values(agg).filter(r => r[7] > 0);
+  out.sort((a, b) => b[7] - a[7]);
+  return out;
+}
+
+function aggChannelByRange(fromStr, toStr) {
+  const filtered = CHANNEL_DAILY.filter(r => r[0] >= fromStr && r[0] <= toStr);
+  const agg = {};
+  filtered.forEach(r => {
+    if (r[0] === '合计' || !r[1]) return;
+    const k = r[1];
+    if (!agg[k]) agg[k] = [k, 0,0,0,0,0,0,0,0,0,0];
+    agg[k][1] += +r[2] || 0;
+    agg[k][2] += +r[3] || 0;
+    agg[k][3] += +r[5] || 0;
+    agg[k][4] += +r[7] || 0;
+    agg[k][5] += +r[9] || 0;
+    agg[k][6] += +r[10] || 0;
+    agg[k][7] += +r[11] || 0;
+    agg[k][8] += +r[12] || 0;
+    agg[k][9] += +r[13] || 0;
+    agg[k][10] += +r[6] || 0;
+  });
+  const out = Object.values(agg).filter(r => r[4] > 0);
+  out.sort((a, b) => b[4] - a[4]);
+  return out;
+}
+
+// 计算 daily 数据的可选日期范围
+const _gameDates = GAMES_DAILY.map(r => r[0]).sort();
+const TAB_DATE_MIN = _gameDates[0] || DATE_MIN;
+const TAB_DATE_MAX = _gameDates[_gameDates.length - 1] || DATE_MAX;
+
 // ============== 网游 ==============
 const ch_wy = echarts.init(document.getElementById('chart-wangyou'));
 
-function renderWangyou(period) {
-  const data = period === 30 ? WANGYOU_30D : WANGYOU;
+function renderWangyou(period, customRange) {
+  let data, rangeLabel;
+  if (customRange) {
+    const agg = aggGamesByRange(customRange.from, customRange.to);
+    data = agg.wy;
+    rangeLabel = `${customRange.from} → ${customRange.to}`;
+  } else {
+    data = period === 30 ? WANGYOU_30D : WANGYOU;
+    rangeLabel = `近 ${period} 天`;
+  }
   const active = data.filter(r => r[4] > 0);
   document.getElementById('wy-kpi-active').textContent = active.length + ' / 48';
   document.getElementById('wy-kpi-rev').textContent = fmt(active.reduce((s, r) => s + r[4], 0));
   document.getElementById('wy-kpi-cost').textContent = fmt(active.reduce((s, r) => s + r[5], 0));
   document.getElementById('wy-kpi-payer').textContent = fmt(active.reduce((s, r) => s + r[10], 0));
-  document.getElementById('wy-range-label').textContent = `数据范围 近 ${period} 天`;
-  const subTxt = `近 ${period} 天`;
-  document.getElementById('wy-kpi-rev-sub').textContent = subTxt;
-  document.getElementById('wy-kpi-cost-sub').textContent = subTxt;
-  document.getElementById('wy-kpi-payer-sub').textContent = subTxt;
+  document.getElementById('wy-range-label').textContent = `数据范围 ${rangeLabel}`;
+  document.getElementById('wy-kpi-rev-sub').textContent = rangeLabel;
+  document.getElementById('wy-kpi-cost-sub').textContent = rangeLabel;
+  document.getElementById('wy-kpi-payer-sub').textContent = rangeLabel;
 
   const top = active.slice().sort((a, b) => a[4] - b[4]);
   ch_wy.setOption({
@@ -447,16 +538,23 @@ renderWangyou(7);
 // ============== 单机 ==============
 const ch_dj = echarts.init(document.getElementById('chart-danji'));
 
-function renderDanji(period) {
-  const data = period === 30 ? DANJI_30D : DANJI;
+function renderDanji(period, customRange) {
+  let data, rangeLabel;
+  if (customRange) {
+    const agg = aggGamesByRange(customRange.from, customRange.to);
+    data = agg.dj;
+    rangeLabel = `${customRange.from} → ${customRange.to}`;
+  } else {
+    data = period === 30 ? DANJI_30D : DANJI;
+    rangeLabel = `近 ${period} 天`;
+  }
   document.getElementById('dj-kpi-active').textContent = data.length;
   document.getElementById('dj-kpi-cost').textContent = fmt(data.reduce((s, r) => s + r[2], 0));
   document.getElementById('dj-kpi-dl').textContent = fmt(data.reduce((s, r) => s + r[1], 0));
-  const subTxt = `近 ${period} 天 TOP 20`;
-  document.getElementById('dj-range-label').textContent = `数据范围 近 ${period} 天`;
-  document.getElementById('dj-kpi-active-sub').textContent = `近 ${period} 天 TOP 20`;
-  document.getElementById('dj-kpi-cost-sub').textContent = subTxt;
-  document.getElementById('dj-kpi-dl-sub').textContent = subTxt;
+  document.getElementById('dj-range-label').textContent = `数据范围 ${rangeLabel}`;
+  document.getElementById('dj-kpi-active-sub').textContent = `${rangeLabel} TOP 20`;
+  document.getElementById('dj-kpi-cost-sub').textContent = `${rangeLabel} TOP 20`;
+  document.getElementById('dj-kpi-dl-sub').textContent = `${rangeLabel} TOP 20`;
 
   const sorted = data.slice().sort((a, b) => a[2] - b[2]);
   ch_dj.setOption({
@@ -485,9 +583,16 @@ renderDanji(7);
 const ch_tc_rev = echarts.init(document.getElementById('chart-taocan-rev'));
 const ch_tc_conv = echarts.init(document.getElementById('chart-taocan-conv'));
 
-function renderTaocan(period) {
-  const data = period === 30 ? TAOCAN_30D : TAOCAN;
-  document.getElementById('tc-range-label').textContent = `数据范围 近 ${period} 天`;
+function renderTaocan(period, customRange) {
+  let data, rangeLabel;
+  if (customRange) {
+    data = aggTaocanByRange(customRange.from, customRange.to);
+    rangeLabel = `${customRange.from} → ${customRange.to}`;
+  } else {
+    data = period === 30 ? TAOCAN_30D : TAOCAN;
+    rangeLabel = `近 ${period} 天`;
+  }
+  document.getElementById('tc-range-label').textContent = `数据范围 ${rangeLabel}`;
 
   const sorted = data.slice().filter(r => r[8] > 0).sort((a, b) => a[8] - b[8]);
   ch_tc_rev.setOption({
@@ -528,9 +633,16 @@ renderTaocan(7);
 // ============== 渠道 ==============
 const ch_ch = echarts.init(document.getElementById('chart-channel'));
 
-function renderChannel(period) {
-  const data = period === 30 ? CHANNEL_30D : CHANNEL;
-  document.getElementById('ch-range-label').textContent = `数据范围 近 ${period} 天`;
+function renderChannel(period, customRange) {
+  let data, rangeLabel;
+  if (customRange) {
+    data = aggChannelByRange(customRange.from, customRange.to);
+    rangeLabel = `${customRange.from} → ${customRange.to}`;
+  } else {
+    data = period === 30 ? CHANNEL_30D : CHANNEL;
+    rangeLabel = `近 ${period} 天`;
+  }
+  document.getElementById('ch-range-label').textContent = `数据范围 ${rangeLabel}`;
 
   const sorted = data.slice().sort((a, b) => a[4] - b[4]);
   ch_ch.setOption({
@@ -555,17 +667,51 @@ function renderChannel(period) {
 }
 renderChannel(7);
 
-// 绑定 4 个 tab 的 toggle 按钮
+// 4 个 tab 共用的渲染派发
+function renderTab(tab, period, customRange) {
+  if (tab === 'wangyou') renderWangyou(period, customRange);
+  else if (tab === 'danji') renderDanji(period, customRange);
+  else if (tab === 'taocan') renderTaocan(period, customRange);
+  else if (tab === 'channel') renderChannel(period, customRange);
+}
+
+// 初始化每个 tab 的日期输入 min/max
+['wangyou', 'danji', 'taocan', 'channel'].forEach(tab => {
+  document.querySelectorAll(`input[type="date"][data-tab="${tab}"]`).forEach(inp => {
+    inp.min = TAB_DATE_MIN;
+    inp.max = TAB_DATE_MAX;
+  });
+});
+
+// 预设按钮点击
 document.querySelectorAll('.date-bar button[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
     const period = parseInt(btn.dataset.period);
     document.querySelectorAll(`.date-bar button[data-tab="${tab}"]`).forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    if (tab === 'wangyou') renderWangyou(period);
-    else if (tab === 'danji') renderDanji(period);
-    else if (tab === 'taocan') renderTaocan(period);
-    else if (tab === 'channel') renderChannel(period);
+    // 清空对应 tab 的自定义日期输入
+    document.querySelectorAll(`input[type="date"][data-tab="${tab}"]`).forEach(inp => inp.value = '');
+    renderTab(tab, period);
+  });
+});
+
+// 日期输入触发自定义区间
+document.querySelectorAll('input[type="date"][data-tab]').forEach(inp => {
+  inp.addEventListener('change', () => {
+    const tab = inp.dataset.tab;
+    const fromEl = document.querySelector(`input[type="date"][data-tab="${tab}"][data-side="from"]`);
+    const toEl = document.querySelector(`input[type="date"][data-tab="${tab}"][data-side="to"]`);
+    let from = fromEl.value, to = toEl.value;
+    if (!from || !to) return;
+    if (from > to) { [from, to] = [to, from]; fromEl.value = from; toEl.value = to; }
+    if (from < TAB_DATE_MIN || to > TAB_DATE_MAX) {
+      alert(`这 4 个 tab 的自定义区间只支持 ${TAB_DATE_MIN} ~ ${TAB_DATE_MAX}（近 30 天）。\n更长历史的话告诉我扩 daily 抓取范围。`);
+      return;
+    }
+    // 取消预设按钮激活
+    document.querySelectorAll(`.date-bar button[data-tab="${tab}"]`).forEach(b => b.classList.remove('active'));
+    renderTab(tab, null, {from, to});
   });
 });
 
