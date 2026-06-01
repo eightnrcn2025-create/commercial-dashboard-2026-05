@@ -152,6 +152,11 @@ function renderDayKPI(dateStr) {
 }
 
 const datePicker = document.getElementById('date-picker');
+// 用实际数据范围覆盖 HTML 里写死的 value / min / max
+datePicker.min = DATE_MIN;
+datePicker.max = DATE_MAX;
+datePicker.value = DATE_MAX;
+
 datePicker.addEventListener('change', e => {
   document.querySelectorAll('.date-bar button').forEach(b => b.classList.remove('active'));
   renderDayKPI(e.target.value);
