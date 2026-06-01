@@ -502,7 +502,7 @@ function renderWangyou(period, customRange) {
   if (customRange) {
     const agg = aggGamesByRange(customRange.from, customRange.to);
     data = agg.wy;
-    rangeLabel = `${customRange.from} → ${customRange.to}`;
+    rangeLabel = customRange.from === customRange.to ? `单日 ${customRange.from}` : `${customRange.from} → ${customRange.to}`;
   } else {
     data = period === 30 ? WANGYOU_30D : WANGYOU;
     rangeLabel = `近 ${period} 天`;
@@ -548,7 +548,7 @@ function renderDanji(period, customRange) {
   if (customRange) {
     const agg = aggGamesByRange(customRange.from, customRange.to);
     data = agg.dj;
-    rangeLabel = `${customRange.from} → ${customRange.to}`;
+    rangeLabel = customRange.from === customRange.to ? `单日 ${customRange.from}` : `${customRange.from} → ${customRange.to}`;
   } else {
     data = period === 30 ? DANJI_30D : DANJI;
     rangeLabel = `近 ${period} 天`;
@@ -592,7 +592,7 @@ function renderTaocan(period, customRange) {
   let data, rangeLabel;
   if (customRange) {
     data = aggTaocanByRange(customRange.from, customRange.to);
-    rangeLabel = `${customRange.from} → ${customRange.to}`;
+    rangeLabel = customRange.from === customRange.to ? `单日 ${customRange.from}` : `${customRange.from} → ${customRange.to}`;
   } else {
     data = period === 30 ? TAOCAN_30D : TAOCAN;
     rangeLabel = `近 ${period} 天`;
@@ -642,7 +642,7 @@ function renderChannel(period, customRange) {
   let data, rangeLabel;
   if (customRange) {
     data = aggChannelByRange(customRange.from, customRange.to);
-    rangeLabel = `${customRange.from} → ${customRange.to}`;
+    rangeLabel = customRange.from === customRange.to ? `单日 ${customRange.from}` : `${customRange.from} → ${customRange.to}`;
   } else {
     data = period === 30 ? CHANNEL_30D : CHANNEL;
     rangeLabel = `近 ${period} 天`;
@@ -695,9 +695,13 @@ document.querySelectorAll('.date-bar button[data-tab]').forEach(btn => {
     const period = parseInt(btn.dataset.period);
     document.querySelectorAll(`.date-bar button[data-tab="${tab}"]`).forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    // 清空对应 tab 的自定义日期输入
     document.querySelectorAll(`input[type="date"][data-tab="${tab}"]`).forEach(inp => inp.value = '');
-    renderTab(tab, period);
+    if (period === 1) {
+      // 昨日 = 数据范围最新一天，用单日 custom range 走聚合
+      renderTab(tab, null, {from: TAB_DATE_MAX, to: TAB_DATE_MAX});
+    } else {
+      renderTab(tab, period);
+    }
   });
 });
 
