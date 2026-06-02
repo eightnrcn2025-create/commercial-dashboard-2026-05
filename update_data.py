@@ -46,14 +46,19 @@ def is_logged_in(page):
 def auto_login(page):
     # 直接走登录页，避免根路径 301 引发的 ERR_EMPTY_RESPONSE
     print('  [login] 走登录流程...', flush=True)
-    for attempt in range(3):
+    last_err = None
+    for attempt in range(6):  # 重试 6 次，最长等 ~80 秒
         try:
-            page.goto(f'{ADMIN}/login', wait_until='domcontentloaded', timeout=30000)
+            page.goto(f'{ADMIN}/login', wait_until='domcontentloaded', timeout=45000)
+            last_err = None
             break
         except Exception as e:
-            if attempt == 2: raise
-            print(f'  [login] 重试 {attempt+1}/3...', flush=True)
-            time.sleep(3)
+            last_err = e
+            wait = min(5 + attempt * 3, 20)  # 5/8/11/14/17/20 秒
+            print(f'  [login] {type(e).__name__} 等 {wait}s 后重试 ({attempt+1}/6)', flush=True)
+            time.sleep(wait)
+    if last_err:
+        raise last_err
     page.wait_for_selector('input[placeholder="请输入登录账号"]', timeout=10000)
 
     username = get_keychain('admin1866-username')
