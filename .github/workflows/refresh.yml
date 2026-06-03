@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   refresh:
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted]   # 任何自托管 runner（Mac 或 Linux VPS 都能接）
     timeout-minutes: 8
     permissions:
       contents: write
@@ -18,4 +18,11 @@ jobs:
       - name: Run update script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: /Users/laoba/commercial-dashboard/run.sh
+        run: |
+          if [ -f /opt/commercial-dashboard/run.sh ]; then
+            /opt/commercial-dashboard/run.sh
+          elif [ -f /Users/laoba/commercial-dashboard/run.sh ]; then
+            /Users/laoba/commercial-dashboard/run.sh
+          else
+            echo "找不到 run.sh，检查 runner 配置" >&2; exit 1
+          fi
