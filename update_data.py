@@ -122,6 +122,26 @@ def go_to_report(page, report_name):
     )
     page.wait_for_timeout(1200)
 
+def wait_table_stable(page, timeout_ms=8000, stable_ms=500):
+    """智能等：表格行数稳定 stable_ms（默认 500ms）后返回"""
+    page.evaluate(f"""
+    async () => {{
+      const start = Date.now();
+      let lastCount = -1, stableStart = 0;
+      while (Date.now() - start < {timeout_ms}) {{
+        const c = document.querySelectorAll('.layui-table-body tbody tr, .layui-table tbody tr').length;
+        if (c === lastCount && c > 0) {{
+          if (Date.now() - stableStart >= {stable_ms}) return c;
+        }} else {{
+          lastCount = c;
+          stableStart = Date.now();
+        }}
+        await new Promise(r => setTimeout(r, 100));
+      }}
+      return lastCount;
+    }}
+    """)
+
 def set_date_range_and_search(page, start, end):
     page.evaluate(f"""
     () => {{
@@ -147,7 +167,7 @@ def set_date_range_and_search(page, start, end):
       }}
     }}
     """)
-    page.wait_for_timeout(3500)
+    wait_table_stable(page)
 
 def set_page_size_3000(page):
     page.evaluate("""
@@ -165,7 +185,7 @@ def set_page_size_3000(page):
       }
     }
     """)
-    page.wait_for_timeout(3500)
+    wait_table_stable(page)
 
 def grab_rows(page):
     return page.evaluate("""

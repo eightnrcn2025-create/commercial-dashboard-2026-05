@@ -6,17 +6,18 @@ const fmtPct = n => (n == null) ? '-' : (n*100).toFixed(1) + '%';
 const refreshBtn = document.getElementById('refresh-btn');
 
 async function triggerGithubWorkflow(workerUrl, btnSpan) {
-  // 1. 调 Worker 触发 workflow（PAT 在 Worker 的 Secret 里）
+  const oldSnapshot = (typeof SNAPSHOT_AT !== 'undefined') ? SNAPSHOT_AT : '';
+  const triggerTime = Date.now();
+
+  // 1. 触发 workflow
   const dispatchRes = await fetch(`${workerUrl}/dispatch`, { method: 'POST' });
   if (!dispatchRes.ok) throw new Error(`Worker 返回 HTTP ${dispatchRes.status}`);
 
-  // 2. 轮询：等 workflow 启动 + 跑完（通过 Worker 中转）
-  btnSpan.textContent = '远程抓数据中';
-  const triggerTime = Date.now();
+  // 2. 等 workflow 启动（1 秒一次轮询，最多 30 秒）
+  btnSpan.textContent = '后端启动中';
   let runId = null;
-  // 等启动（最多 30 秒）
-  for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 2000));
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 1000));
     const s = await fetch(`${workerUrl}/status`).then(r => r.json()).catch(() => ({}));
     if (s.id && new Date(s.created_at).getTime() >= triggerTime - 5000) {
       runId = s.id;
@@ -25,20 +26,28 @@ async function triggerGithubWorkflow(workerUrl, btnSpan) {
   }
   if (!runId) throw new Error('workflow 没在 30 秒内启动（runner 可能离线）');
 
-  // 等完成（最多 6 分钟）
-  for (let i = 0; i < 60; i++) {
-    await new Promise(r => setTimeout(r, 6000));
+  // 3. 等跑完（3 秒一次轮询）
+  btnSpan.textContent = '抓数据中';
+  for (let i = 0; i < 80; i++) {
+    await new Promise(r => setTimeout(r, 3000));
     const s = await fetch(`${workerUrl}/status`).then(r => r.json()).catch(() => ({}));
-    btnSpan.textContent = `远程跑中 (${s.status || '...'})`;
+    btnSpan.textContent = `跑中 (${s.status || '...'})`;
     if (s.status === 'completed') {
       if (s.conclusion !== 'success') throw new Error(`workflow 失败: ${s.conclusion}`);
-      // 3. 等 Pages 重建 (约 50 秒)
+      // 4. 智能等 Pages 拿到新数据（最多 90 秒）
       btnSpan.textContent = '等 Pages 重建';
-      await new Promise(r => setTimeout(r, 50000));
-      return true;
+      for (let j = 0; j < 45; j++) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const txt = await fetch(`data.js?cb=${Date.now()}`, {cache: 'no-store'}).then(r => r.text());
+          const m = txt.match(/SNAPSHOT_AT = "([^"]+)"/);
+          if (m && m[1] !== oldSnapshot) return true;
+        } catch(e) {}
+      }
+      return true; // 超时但还是 reload 试试
     }
   }
-  throw new Error('workflow 超过 6 分钟没完成');
+  throw new Error('workflow 超过 4 分钟没完成');
 }
 
 if (refreshBtn) {
