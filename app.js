@@ -209,9 +209,11 @@ function renderDayKPI(dateStr) {
 
 const datePicker = document.getElementById('date-picker');
 // 用实际数据范围覆盖 HTML 里写死的 value / min / max
+// 默认选"前一天"（完整数据），避免今天的滚动累计被拿来对比误导
 datePicker.min = DATE_MIN;
 datePicker.max = DATE_MAX;
-datePicker.value = DATE_MAX;
+const DEFAULT_DAY = shiftDate(DATE_MAX, -1);
+datePicker.value = DEFAULT_DAY;
 
 datePicker.addEventListener('change', e => {
   document.querySelectorAll('.date-bar button').forEach(b => b.classList.remove('active'));
@@ -228,8 +230,8 @@ document.querySelectorAll('.date-bar button[data-shift]').forEach(btn => {
   });
 });
 
-// 初始化为最新日
-renderDayKPI(DATE_MAX);
+// 初始化为前一天（DEFAULT_DAY = 数据最大值 - 1）
+renderDayKPI(DEFAULT_DAY);
 
 // ============== 自由区间对比 ==============
 const RANGE_METRICS = [
