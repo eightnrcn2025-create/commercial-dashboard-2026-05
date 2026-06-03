@@ -27,7 +27,7 @@ body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.65;
 }
-.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
 .header {
   background: linear-gradient(180deg, var(--header-bg) 0%, var(--header-bg-2) 100%);
@@ -57,17 +57,27 @@ body {
 }
 .intro b { color: var(--text); }
 
+.section-title {
+  font-size: 11.5px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 14px;
+  margin-top: 36px;
+}
+.section-title:first-child { margin-top: 0; }
+
 .choices {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 20px; margin-bottom: 56px;
+  gap: 18px; margin-bottom: 24px;
 }
 @media (max-width: 700px) { .choices { grid-template-columns: 1fr; } }
+
+.choices.pro { grid-template-columns: 1fr; max-width: 540px; }
 
 .choice {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 28px 30px;
+  padding: 26px 28px;
   text-decoration: none;
   color: var(--text);
   transition: all 0.2s;
@@ -84,22 +94,32 @@ body {
   font-size: 10.5px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--gold); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.choice .os {
+  display: inline-block;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px;
+  background: rgba(30, 90, 135, 0.1);
+  color: var(--accent);
+  border-radius: 10px;
+  letter-spacing: 0.05em;
 }
 .choice h2 {
-  font-size: 22px; font-weight: 600;
-  margin-bottom: 14px; letter-spacing: 0.01em;
+  font-size: 20px; font-weight: 600;
+  margin-bottom: 12px; letter-spacing: 0.01em;
 }
-.choice p { font-size: 13.5px; color: var(--text-2); margin-bottom: 18px; }
-.choice ul { font-size: 13px; padding-left: 18px; color: var(--text-2); margin-bottom: 18px; flex: 1; }
-.choice ul li { margin: 4px 0; }
+.choice p { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
+.choice ul { font-size: 12.5px; padding-left: 18px; color: var(--text-2); margin-bottom: 18px; flex: 1; }
+.choice ul li { margin: 3px 0; }
 .choice .cta {
   display: inline-block;
   margin-top: auto;
-  padding: 8px 14px;
+  padding: 7px 14px;
   background: var(--header-bg);
   color: var(--gold-soft);
   border-radius: 3px;
-  font-size: 12px;
+  font-size: 11.5px;
   letter-spacing: 0.06em;
   font-weight: 600;
   text-transform: uppercase;
@@ -112,7 +132,7 @@ body {
 }
 .choice.recommended::before {
   content: '推荐 / 团队协作首选';
-  position: absolute; top: -12px; left: 24px;
+  position: absolute; top: -12px; left: 22px;
   background: var(--gold);
   color: white;
   padding: 3px 10px;
@@ -126,7 +146,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 28px 30px;
+  padding: 24px 28px;
   margin-bottom: 36px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
@@ -138,14 +158,14 @@ body {
 }
 .compare table {
   width: 100%; border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: 13px;
 }
 .compare th, .compare td {
-  padding: 10px 12px; text-align: left;
+  padding: 9px 12px; text-align: left;
   border-bottom: 1px solid var(--border);
 }
 .compare th {
-  font-weight: 600; font-size: 11px;
+  font-weight: 600; font-size: 10.5px;
   letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--text-3);
 }
@@ -153,10 +173,11 @@ body {
 .compare td.vps { color: var(--text); font-weight: 500; }
 
 footer {
-  text-align: center; padding: 36px 0;
+  text-align: center; padding: 36px 0 28px;
   font-size: 11.5px; color: var(--text-3);
   border-top: 1px solid var(--border);
   letter-spacing: 0.05em;
+  margin-top: 24px;
 }
 </style>
 </head>
@@ -177,49 +198,69 @@ footer {
     <p>读完任何一版的 SOP，你会知道：每个阶段问 AI 什么、AI 会回什么、怎么判断 AI 做对了。</p>
   </div>
 
+  <div class="section-title">先选系统（自己电脑）</div>
+
   <div class="choices">
-    <a href="./sop-lite.html" class="choice">
-      <div class="tag">Lite 版</div>
-      <h2>不依赖 VPS</h2>
-      <p>看板跑在你 <b>Mac</b> 上，团队成员浏览器打开 GitHub Pages 就能看。Mac 关机时数据停止更新（团队点刷新也没用），但开机时一切正常。</p>
+    <a href="./sop-lite-mac.html" class="choice">
+      <div class="tag">Lite 版 <span class="os">macOS</span></div>
+      <h2>Mac 跑就够</h2>
+      <p>看板自动更新和数据抓取都在你 <b>Mac</b> 上。团队浏览器打开就能看。</p>
       <ul>
-        <li>✅ 不花钱（GitHub + Cloudflare 免费）</li>
+        <li>✅ 不花钱</li>
         <li>✅ 设置简单（一台 Mac + 几条命令）</li>
-        <li>⚠️ Mac 必须保持开机（合盖睡眠可以，关机不行）</li>
+        <li>⚠️ Mac 必须开着（合盖睡眠 OK）</li>
         <li>⚠️ 出差不带电脑 = 没更新</li>
       </ul>
-      <span class="cta">看 Lite 版指南 →</span>
+      <span class="cta">看 Mac 版指南 →</span>
     </a>
 
-    <a href="./sop-vps.html" class="choice recommended">
-      <div class="tag">Pro 版</div>
-      <h2>常驻 VPS</h2>
-      <p>看板的"自动更新"和"团队远程触发"跑在一台<b>云上小服务器</b>（VPS）上，你 Mac 关机出差都不影响。多一层架构，但更省心。</p>
+    <a href="./sop-lite-win.html" class="choice">
+      <div class="tag">Lite 版 <span class="os">Windows</span></div>
+      <h2>Windows 跑就够</h2>
+      <p>看板自动更新和数据抓取都在你 <b>Windows PC</b> 上。用 Task Scheduler 调度。</p>
       <ul>
-        <li>✅ <b>Mac 关机也照样更新</b></li>
-        <li>✅ 团队点刷新 = 立刻拉新数据</li>
+        <li>✅ 不花钱</li>
+        <li>✅ 设置简单（PowerShell + Task Scheduler）</li>
+        <li>⚠️ PC 必须开着（睡眠 OK 但休眠会停）</li>
+        <li>⚠️ 跟 Mac 版限制一样</li>
+      </ul>
+      <span class="cta">看 Windows 版指南 →</span>
+    </a>
+  </div>
+
+  <div class="section-title">想要全天候 / 团队随时刷新</div>
+
+  <div class="choices pro">
+    <a href="./sop-vps.html" class="choice recommended">
+      <div class="tag">Pro 版 <span class="os">Mac / Win 都行</span></div>
+      <h2>常驻 VPS</h2>
+      <p>看板的"自动更新"和"团队远程触发刷新"跑在一台<b>云上小服务器</b>（VPS）上，你电脑关机/出差都不影响。多一层架构，更省心。</p>
+      <ul>
+        <li>✅ <b>你电脑关机也照样更新</b></li>
+        <li>✅ <b>团队点刷新立刻拉新数据</b></li>
+        <li>✅ Mac / Windows 都可以（前 6 个阶段用对应 Lite 版，加阶段 7-8 即可）</li>
         <li>⚠️ 一台便宜 VPS（5-10 美元/月）</li>
-        <li>⚠️ 比 Lite 版多 2-3 个组件要设置</li>
+        <li>⚠️ 多 2 个组件要设置</li>
       </ul>
       <span class="cta">看 Pro 版指南 →</span>
     </a>
   </div>
 
   <div class="compare">
-    <h3>两版对比</h3>
+    <h3>三版对比</h3>
     <table>
       <thead>
-        <tr><th>能力</th><th>Lite 版</th><th>Pro 版</th></tr>
+        <tr><th>能力</th><th>Lite (Mac)</th><th>Lite (Win)</th><th>Pro (+VPS)</th></tr>
       </thead>
       <tbody>
-        <tr><td>看板呈现</td><td class="lite">✓ 一样</td><td class="vps">✓ 一样</td></tr>
-        <tr><td>团队浏览器访问</td><td class="lite">✓</td><td class="vps">✓</td></tr>
-        <tr><td>自动更新（30 分钟）</td><td class="lite">需 Mac 开机</td><td class="vps">VPS 24×7</td></tr>
-        <tr><td>团队点"刷新"立刻拉新数据</td><td class="lite">需 Mac 开机</td><td class="vps">✓ 永远可用</td></tr>
-        <tr><td>所需组件</td><td class="lite">Mac + GitHub</td><td class="vps">+ Cloudflare Worker + VPS</td></tr>
-        <tr><td>月成本</td><td class="lite">¥0</td><td class="vps">¥35-70（VPS）</td></tr>
-        <tr><td>初次搭建难度</td><td class="lite">★★☆☆☆</td><td class="vps">★★★☆☆</td></tr>
-        <tr><td>适合人群</td><td class="lite">个人用 / 团队 ≤3 人</td><td class="vps">团队 ≥3 人 / 老板要随时看</td></tr>
+        <tr><td>看板呈现</td><td class="lite">✓</td><td class="lite">✓</td><td class="vps">✓</td></tr>
+        <tr><td>团队浏览器访问</td><td class="lite">✓</td><td class="lite">✓</td><td class="vps">✓</td></tr>
+        <tr><td>自动每 30 分钟更新</td><td class="lite">需 Mac 开机</td><td class="lite">需 PC 开机</td><td class="vps">VPS 24×7</td></tr>
+        <tr><td>团队点"刷新"立刻拉数据</td><td class="lite">需电脑开机</td><td class="lite">需电脑开机</td><td class="vps">✓ 永远可用</td></tr>
+        <tr><td>调度工具</td><td class="lite">launchd</td><td class="lite">Task Scheduler</td><td class="vps">cron + Worker</td></tr>
+        <tr><td>月成本</td><td class="lite">¥0</td><td class="lite">¥0</td><td class="vps">¥35-70</td></tr>
+        <tr><td>初次搭建</td><td class="lite">★★☆☆☆</td><td class="lite">★★☆☆☆</td><td class="vps">★★★☆☆</td></tr>
+        <tr><td>适合人群</td><td class="lite">个人用 / 团队 ≤3</td><td class="lite">个人用 / 团队 ≤3</td><td class="vps">团队 ≥3 / 老板要看</td></tr>
       </tbody>
     </table>
   </div>
@@ -227,7 +268,9 @@ footer {
 </div>
 
 <footer>
-  COMMERCIAL DASHBOARD · BUILD PLAYBOOK · v2.0
+  <div class="container">
+    COMMERCIAL DASHBOARD · BUILD PLAYBOOK · v2.1（含 Windows 版）
+  </div>
 </footer>
 
 </body>
