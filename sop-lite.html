@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用 AI 搭看板 · Lite 版（无 VPS）</title>
+<style>
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --surface-alt: #fafbfc;
+  --header-bg: #0f1722; --header-bg-2: #1a2332;
+  --text: #1a2332; --text-2: #5c6878; --text-3: #8a93a3;
+  --border: #e6e9ee; --border-2: #eef0f3;
+  --accent: #1e5a87; --gold: #b08c39; --gold-soft: #d9b86b;
+  --success: #2d7a55; --danger: #a8483d;
+  --code-bg: #1a2332; --code-fg: #e8eaee;
+  --prompt-bg: #f4f7fa;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+               "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.65;
+}
+.layout {
+  display: grid; grid-template-columns: 260px 1fr;
+  max-width: 1440px; margin: 0 auto;
+}
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.header {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, var(--header-bg) 0%, var(--header-bg-2) 100%);
+  color: #fff; padding: 30px 44px 24px; position: relative;
+}
+.header::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 14%, transparent 50%);
+}
+.header h1 {
+  font-size: 24px; font-weight: 500; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 14px;
+}
+.header h1::before {
+  content: ''; width: 3px; height: 26px;
+  background: var(--gold); border-radius: 1px;
+}
+.header .sub {
+  font-size: 12px; color: rgba(255, 255, 255, 0.55);
+  margin-top: 10px; margin-left: 17px; letter-spacing: 0.06em;
+}
+.header .back {
+  position: absolute; top: 30px; right: 44px;
+  font-size: 11.5px; color: rgba(255,255,255,0.55);
+  text-decoration: none; letter-spacing: 0.05em;
+}
+.header .back:hover { color: var(--gold-soft); }
+
+nav.toc {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  padding: 30px 18px 30px 44px;
+  border-right: 1px solid var(--border);
+  background: var(--surface); font-size: 13px;
+}
+@media (max-width: 900px) {
+  nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+}
+nav.toc .toc-title {
+  font-size: 10.5px; font-weight: 700; color: var(--text-3);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+nav.toc ol { list-style: none; counter-reset: tocnum; }
+nav.toc li { counter-increment: tocnum; margin: 4px 0; }
+nav.toc a {
+  display: block; padding: 6px 10px 6px 32px;
+  color: var(--text-2); text-decoration: none;
+  border-radius: 3px; position: relative; transition: all 0.15s;
+}
+nav.toc a::before {
+  content: counter(tocnum, decimal-leading-zero);
+  position: absolute; left: 6px;
+  color: var(--text-3); font-size: 10.5px;
+  font-weight: 600; letter-spacing: 0.04em;
+}
+nav.toc a:hover { background: var(--surface-alt); color: var(--text); }
+
+main { padding: 40px 52px 80px; max-width: 1000px; }
+@media (max-width: 900px) { main { padding: 28px 22px 60px; } }
+
+section { margin-bottom: 56px; scroll-margin-top: 24px; }
+section h2 {
+  font-size: 19px; font-weight: 600; color: var(--text);
+  letter-spacing: 0.01em; margin-bottom: 18px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: baseline; gap: 12px;
+}
+section h2 .num {
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  letter-spacing: 0.1em;
+}
+section h3 {
+  font-size: 14.5px; font-weight: 600; color: var(--text);
+  margin-top: 28px; margin-bottom: 10px; letter-spacing: 0.02em;
+}
+section h4 {
+  font-size: 11.5px; font-weight: 700; color: var(--text-3);
+  margin-top: 18px; margin-bottom: 8px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+p { margin-bottom: 12px; color: var(--text); font-size: 14px; }
+p.lead { font-size: 15px; color: var(--text-2); margin-bottom: 18px; }
+
+ul, ol { padding-left: 22px; margin-bottom: 14px; font-size: 14px; }
+ul li, ol li { margin: 4px 0; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  font-family: "SF Mono", "Monaco", monospace;
+  font-size: 12.5px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 3px;
+  color: var(--text);
+}
+pre {
+  background: var(--code-bg); color: var(--code-fg);
+  padding: 14px 18px; border-radius: 4px; overflow-x: auto;
+  font-family: "SF Mono", "Monaco", monospace;
+  font-size: 12.5px; line-height: 1.6;
+  margin: 12px 0 16px; border-left: 2px solid var(--gold);
+}
+pre code { background: transparent; border: none; padding: 0; color: inherit; font-size: inherit; }
+
+.prompt {
+  background: var(--prompt-bg);
+  border: 1px solid #d8dee6;
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 12px 0 16px;
+  font-family: -apple-system, "PingFang SC", monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1d3454;
+  white-space: pre-wrap;
+}
+.prompt-label {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 6px;
+}
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 18px 22px; margin: 14px 0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.card.warn { background: #fbf5e8; border-left: 2px solid var(--gold); }
+.card.success { background: #eef7f1; border-left: 2px solid var(--success); }
+.card.tip { background: #eef2f7; border-left: 2px solid var(--accent); }
+.card .label {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 6px;
+}
+.card.warn .label { color: #80520d; }
+.card.success .label { color: #1a5538; }
+.card.tip .label { color: #173a59; }
+
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; margin: 12px 0 16px;
+}
+th, td {
+  padding: 11px 14px; text-align: left;
+  border-bottom: 1px solid var(--border-2);
+  vertical-align: top;
+}
+th {
+  background: var(--surface-alt); color: var(--text-2);
+  font-weight: 600; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.phase-meta {
+  display: flex; gap: 16px; font-size: 11.5px;
+  color: var(--text-3); margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+.phase-meta span {
+  display: flex; align-items: center; gap: 5px;
+}
+.phase-meta b { color: var(--text-2); font-weight: 600; }
+
+.check {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 12px 0 16px;
+  font-size: 13px;
+}
+.check .label {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #1a5538; margin-bottom: 6px;
+}
+
+footer {
+  grid-column: 1 / -1; text-align: center;
+  padding: 30px 44px; font-size: 11.5px;
+  color: var(--text-3); border-top: 1px solid var(--border);
+  letter-spacing: 0.05em;
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<div class="header">
+  <h1>用 AI 搭看板 · Lite 版</h1>
+  <div class="sub">CLAUDE-DRIVEN BUILD · 不依赖 VPS · Mac 跑就够</div>
+  <a href="./sop.html" class="back">← 回选择版本</a>
+</div>
+
+<nav class="toc">
+  <div class="toc-title">目录</div>
+  <ol>
+    <li><a href="#how">这份 SOP 怎么用</a></li>
+    <li><a href="#prep">准备工具</a></li>
+    <li><a href="#phase1">阶段 1: 调研后台</a></li>
+    <li><a href="#phase2">阶段 2: 设计指标</a></li>
+    <li><a href="#phase3">阶段 3: 写抓取脚本</a></li>
+    <li><a href="#phase4">阶段 4: 看板前端</a></li>
+    <li><a href="#phase5">阶段 5: 发布 GitHub Pages</a></li>
+    <li><a href="#phase6">阶段 6: Mac 定时</a></li>
+    <li><a href="#use">团队使用 / 边界</a></li>
+    <li><a href="#tips">关键经验</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 1 -->
+<section id="how">
+  <h2><span class="num">01</span>这份 SOP 怎么用</h2>
+  <p class="lead">这是<b>用 Claude 一步步搭看板</b>的指南，每个阶段告诉你：</p>
+  <ul>
+    <li><b>这一步要做什么</b>（清楚目标）</li>
+    <li><b>给 AI 的提示词长什么样</b>（直接抄）</li>
+    <li><b>AI 会输出什么</b>（你能预期）</li>
+    <li><b>怎么验证它做对了</b>（眼睛能看、手能点）</li>
+  </ul>
+  <div class="card tip">
+    <div class="label">不需要技术背景</div>
+    <p>非技术运营 / 产品也能跟着做。难点在<b>把自己想要的东西讲清楚给 AI</b>，不在写代码 — 写代码的事 AI 全包。</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="prep">
+  <h2><span class="num">02</span>准备工具</h2>
+
+  <h3>2.1 选一个 AI 工具</h3>
+  <table>
+    <thead><tr><th>选项</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><b>Claude Code（最强）</b></td><td>在终端跑，能直接帮你建文件、跑命令、调试。<a href="https://claude.com/claude-code" target="_blank">官网</a></td></tr>
+      <tr><td>Claude.ai（网页）</td><td>对话式，你复制粘贴代码。门槛低，但效率比 Code 低</td></tr>
+      <tr><td>ChatGPT、Gemini 等</td><td>类似 Claude.ai，按个人偏好</td></tr>
+    </tbody>
+  </table>
+  <p class="lead">这份 SOP 默认用 <b>Claude Code</b>（推荐），其他 AI 思路一样。</p>
+
+  <h3>2.2 还需要</h3>
+  <ul>
+    <li><b>一台 Mac</b>（Windows / Linux 也行，命令略有差异）</li>
+    <li><b>GitHub 账号</b>（免费注册）</li>
+    <li><b>你公司 admin 后台的访问</b>（账号 + 密码 + 2FA 密钥）</li>
+    <li><b>能上你公司内网</b>（如果 admin 在内网。Lite 版要求 Mac 在公司网）</li>
+  </ul>
+
+  <h3>2.3 给 AI 看 SOP 自己</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 开场提示词</div>
+我想给公司搭一个商业看板（数据来自公司 admin 后台）。
+
+我打算按这份 SOP 走：https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/sop-lite.html
+
+我是非技术背景，需要你带着我走。每一步告诉我：
+1. 这一步要干嘛
+2. 我需要给你什么信息
+3. 你会做什么
+4. 我怎么验证你做对了
+
+我们从阶段 1 开始。</div>
+</section>
+
+<!-- 3 -->
+<section id="phase1">
+  <h2><span class="num">03</span>阶段 1：调研后台</h2>
+  <div class="phase-meta">
+    <span>🎯 <b>目标</b>：摸清后台有哪些报表、能取哪些指标</span>
+  </div>
+
+  <h3>3.1 你要做的（人工部分）</h3>
+  <ol>
+    <li>登 admin 后台</li>
+    <li>把所有可能用得上的页面都点一遍，<b>截图保存</b></li>
+    <li>记下每个报表能筛选什么（日期 / 渠道 / 游戏...）和能导出多少行</li>
+  </ol>
+
+  <h3>3.2 让 AI 帮你梳理</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+我把 admin 后台几个核心报表截图给你看。
+
+你帮我整理出：
+1. 每个报表的字段有哪些
+2. 每个字段是"已经有"还是"要派生算"
+3. 哪些字段对"商业化看板"最关键
+4. 输出成一个表格，列：指标 / 后台位置 / 是否已有 / 取数说明 / 优先级（P0/P1/P2）
+
+我先发第一张截图：[截图]</div>
+
+  <h3>3.3 AI 会输出</h3>
+  <p>一个 CSV 或表格，把你截图里的字段都对齐到指标。你<b>跟需求方对一遍</b>，决定哪些进看板。</p>
+
+  <div class="check">
+    <div class="label">验证：阶段 1 完成的标志</div>
+    你手里有一份"指标 → 后台位置"映射表，30-50 项 P0/P1 指标。
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="phase2">
+  <h2><span class="num">04</span>阶段 2：设计指标体系</h2>
+  <div class="phase-meta">
+    <span>🎯 <b>目标</b>：决定看板要分几个 tab，每个 tab 看什么</span>
+  </div>
+
+  <h3>4.1 给 AI 你的指标表</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+基于刚才那份指标表，帮我设计看板的 tab 结构。
+
+要求：
+- 老板 30 秒能看懂的"总览大盘"放第一个 tab
+- 分维度（游戏 / 渠道 / 套餐...）每个一个 tab
+- 时间趋势单独一个 tab
+- 留存 / LTV 这种深度指标可以合并
+
+输出每个 tab 的：标题 / 核心 KPI 卡 / 主要图表 / 表格列。</div>
+
+  <h3>4.2 你跟 AI 来回调整</h3>
+  <ul>
+    <li>"网游 tab 加 ARPU 列"</li>
+    <li>"渠道 tab 太挤，把 ARPPU 挪到 tooltip 里"</li>
+    <li>"留存周期改成 D1/D3/D7/D14/D30 五档"</li>
+  </ul>
+
+  <div class="check">
+    <div class="label">验证：阶段 2 完成的标志</div>
+    你能用 1 张纸画出 6-8 个 tab 的草图（什么位置放什么图）。
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="phase3">
+  <h2><span class="num">05</span>阶段 3：写抓取脚本</h2>
+  <div class="phase-meta">
+    <span>🎯 <b>目标</b>：让 Python 脚本自动登录 admin、抓表、生成数据文件</span>
+  </div>
+
+  <h3>5.1 重点：先告诉 AI admin 的登录方式</h3>
+  <p>常见三种组合，<b>你测一下用的是哪种</b>：</p>
+  <ol>
+    <li>只有表单登录</li>
+    <li>nginx Basic Auth（系统弹框）+ 表单</li>
+    <li>上面任一 + Google Authenticator 2FA</li>
+  </ol>
+  <p>怎么测：</p>
+  <ul>
+    <li>访问 admin URL，<b>第一个弹的是系统级输用户名密码框？</b> → 有 Basic Auth</li>
+    <li>过了后看到自己的登录页 → 表单登录</li>
+    <li>表单里有"谷歌验证码"字段 → 有 2FA</li>
+  </ul>
+
+  <h3>5.2 给 AI 提示词</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+帮我写一个 Python 脚本 update_data.py，每次跑：
+1. 登录 admin（URL 是 xxxx）
+   认证方式：[nginx Basic Auth + 表单登录 + Google Authenticator]
+2. 依次抓这些报表的数据：[报表 1 URL] [报表 2 URL] ...
+3. 把数据合并归档到一个 data.js 文件
+   data.js 格式：const DAILY = [...]; const WANGYOU = [...];
+
+要求：
+- 用 Playwright（不是 BeautifulSoup，因为表格异步加载）
+- TOTP 用 pyotp 库自动算
+- 密码不要硬编码，从 .env 文件读
+- 加增量归档逻辑：data.js 里旧数据保留，新数据 merge 进去
+
+我先把账号密码用 macOS Keychain 或 .env 文件存。</div>
+
+  <h3>5.3 AI 会做的几件事</h3>
+  <ol>
+    <li>问你各报表的 URL（不知道？让它教你怎么扒）</li>
+    <li>写出 update_data.py</li>
+    <li>给你一份 .env 模板，让你填密码</li>
+    <li>帮你装 venv + playwright + chromium</li>
+    <li>跑一次让你验证</li>
+  </ol>
+
+  <div class="card warn">
+    <div class="label">坑预警</div>
+    <p>第一次跑大概率会失败 — admin 的反爬、超时、TOTP 错位、表格 selector 不对……都正常。<b>把报错原样发给 AI，它来 debug</b>，2-3 轮一般能修好。</p>
+  </div>
+
+  <div class="check">
+    <div class="label">验证：阶段 3 完成的标志</div>
+    <code>python update_data.py</code> 跑完 → 生成一个新的 data.js → 你打开它能看到熟悉的数字（跟你 admin 里看的对得上）。
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="phase4">
+  <h2><span class="num">06</span>阶段 4：看板前端</h2>
+  <div class="phase-meta">
+    <span>🎯 <b>目标</b>：把 data.js 渲染成可互动看板</span>
+  </div>
+
+  <h3>6.1 给 AI 提示词</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+帮我写一个看板前端，3 个文件：index.html + app.js + data.js（data.js 已有，是上一步生成的）。
+
+技术：
+- 用 ECharts 画图
+- 不要任何框架（不要 React / Vue）— 单文件 HTML 直接打开就能跑
+- 视觉风格："执行级"，深海军蓝 header + 暗金 accent
+
+tab 结构按之前阶段 2 设计的来：
+[tab 1] [tab 2] ...
+
+每个 tab 都要支持：
+1. 时间区间切换（近 7 天 / 近 30 天 / 自定义）
+2. 数据对比（本期 vs 对比期）
+3. 表格列可点击排序
+
+写完每个 tab 给我看一下截图。</div>
+
+  <h3>6.2 反复调整</h3>
+  <ul>
+    <li>"柱图改成横向"</li>
+    <li>"日期选择器默认显示前一天"</li>
+    <li>"tooltip 加上 ARPU"</li>
+    <li>"颜色太花，统一成 3-4 个色调"</li>
+  </ul>
+
+  <div class="check">
+    <div class="label">验证：阶段 4 完成的标志</div>
+    用浏览器双击 index.html → 看板能正常显示所有 tab 和数据。
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="phase5">
+  <h2><span class="num">07</span>阶段 5：发布到 GitHub Pages</h2>
+  <div class="phase-meta">
+    <span>🎯 <b>目标</b>：让团队所有人能用浏览器看</span>
+  </div>
+
+  <div class="card warn">
+    <div class="label">注意</div>
+    <p>GitHub Pages 免费托管 = 仓库要 <b>public</b> = <b>数据公开</b>。决定之前跟需求方对齐：</p>
+    <ul>
+      <li>商业指标接受公开 → 用免费方案</li>
+      <li>不能接受 → 用 GitHub Pro（30/月可开私有 Pages）或 Cloudflare Pages + Access</li>
+    </ul>
+  </div>
+
+  <h3>7.1 让 AI 帮你建仓库 + 推</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+帮我：
+1. 在 GitHub 建一个新的 public 仓库（名字 commercial-dashboard）
+2. 把当前文件夹推上去（用 gh CLI，不要让我手动登录）
+3. 开 GitHub Pages（main 分支根目录）
+4. 给我那个 Pages URL
+
+我电脑上 gh CLI 已经登录了（我先跑过 gh auth login）。</div>
+
+  <h3>7.2 把不该上传的排除</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+建 .gitignore，排除：
+- .env（密码文件）
+- .venv/（Python 环境）
+- logs/（日志）
+- __pycache__/</div>
+
+  <div class="check">
+    <div class="label">验证：阶段 5 完成的标志</div>
+    浏览器打开 <code>https://&lt;你 GH 用户名&gt;.github.io/&lt;仓库名&gt;/</code> → 看板正常显示。把这个 URL 发给同事，他们也能看。
+  </div>
+</section>
+
+<!-- 8 -->
+<section id="phase6">
+  <h2><span class="num">08</span>阶段 6：Mac 上设定时</h2>
+  <div class="phase-meta">
+    <span>🎯 <b>目标</b>：脚本每 30 分钟自动跑，数据持续更新</span>
+  </div>
+
+  <h3>8.1 让 AI 设 macOS launchd</h3>
+  <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
+帮我设置 macOS launchd，让 update_data.py 每 30 分钟自动跑一次。
+
+要求：
+- Mac 开机自动启动
+- 跑完自动 git push 到 GitHub（这样 Pages 自动更新）
+- 日志写到 logs/stderr.log 方便排错
+- 提供 install_cron.sh 脚本，我直接跑就装好
+
+我的项目路径：/Users/xxx/commercial-dashboard</div>
+
+  <h3>8.2 让 git push 不需要每次手动输密码</h3>
+  <p>AI 会教你两种方式：</p>
+  <ol>
+    <li>用 GitHub CLI 的认证（最简单）</li>
+    <li>配 SSH key</li>
+  </ol>
+
+  <div class="check">
+    <div class="label">验证：阶段 6 完成的标志</div>
+    <ul>
+      <li><code>launchctl list | grep dashboard</code> 能看到任务在</li>
+      <li>看 GitHub 仓库的 commit 历史 → 30 分钟后能看到 "auto: 数据更新" 的新 commit</li>
+      <li>浏览器刷新看板 → header 时间戳变成"刚刚更新"</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="use">
+  <h2><span class="num">09</span>团队使用 / 边界明确</h2>
+
+  <h3>9.1 发给团队的话</h3>
+  <div class="card success">
+    <div class="label">团队使用说明（直接抄给同事）</div>
+    <p>看板地址：<code>https://&lt;你的 Pages URL&gt;</code></p>
+    <ol>
+      <li>每天打开看就行，<b>不用登录</b></li>
+      <li>看 header 时间戳是绿色（&lt; 1 小时）/ 黄色（4 小时+）/ 红色（1 天+）</li>
+      <li>看到红色 → 找 eight</li>
+    </ol>
+  </div>
+
+  <h3>9.2 Lite 版的边界</h3>
+  <div class="card warn">
+    <div class="label">⚠️ 这些情况下数据不会更新</div>
+    <ul>
+      <li>你 Mac <b>关机</b>（合盖睡眠 OK，关机不行）</li>
+      <li>你 Mac <b>不在公司网</b>（出差不接 VPN）</li>
+      <li>admin 后台改了密码 / 重置了 2FA</li>
+    </ul>
+    <p>如果团队反馈"数据卡了"，先检查这三条。</p>
+  </div>
+
+  <h3>9.3 团队点"刷新"按钮会怎样？</h3>
+  <p>Lite 版的"刷新"按钮只是<b>重新加载页面</b>，拿 GitHub Pages 上当前最新的 data.js。<b>不会触发新一轮抓取</b>。</p>
+  <p>如果想要"点刷新立刻拉新数据"，要升级到 <a href="./sop-vps.html">Pro 版</a>（加 VPS）。</p>
+</section>
+
+<!-- 10 -->
+<section id="tips">
+  <h2><span class="num">10</span>关键经验</h2>
+
+  <h3>10.1 怎么和 AI 高效对话</h3>
+  <ul>
+    <li><b>先讲背景再讲需求</b>。"我在做 xxx 项目，遇到 yyy 问题" 比 "怎么 yyy" 好 10 倍</li>
+    <li><b>报错原样发</b>。不要意会 — 报错有时候 AI 能从一个不起眼的字眼看出真因</li>
+    <li><b>"你这步为啥这样做"</b> — 不懂就问，AI 会解释，你下次就知道</li>
+    <li><b>不满意就直说</b> — "这个 UI 太花" / "这步太复杂能不能简化"，AI 是工具不是同事，不用客气</li>
+  </ul>
+
+  <h3>10.2 必须人工把关的环节</h3>
+  <ul>
+    <li><b>密码 / TOTP 密钥不要发到 AI 对话框</b>（让 AI 用 <code>read -s</code> 或 keychain 命令交互式提示你输入）</li>
+    <li><b>git push 之前看 commit 内容</b>，确认没把 .env 推上去</li>
+    <li><b>第一次开 GitHub Pages 时</b>，仓库一定是 public — 确认这里数据敏感度可接受</li>
+  </ul>
+
+  <h3>10.3 卡住了怎么办</h3>
+  <ol>
+    <li><b>把全部上下文发给 AI</b>：你做了什么、看到什么、期望是什么</li>
+    <li>如果 AI 也卡住，<b>让它给你 3 个不同的尝试方向</b>，你挑一个继续</li>
+    <li>真不行 → 把整套上下文发到 Stack Overflow / Reddit / 群里求助</li>
+  </ol>
+
+  <div class="card tip">
+    <div class="label">最后一句</div>
+    <p>非技术背景搭这个系统的最大风险，不是<b>不会写代码</b>，而是<b>不清楚自己要什么</b>。把指标体系想清楚（阶段 1+2），后面 AI 会带着你走。</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  COMMERCIAL DASHBOARD · BUILD PLAYBOOK · LITE · v2.0
+</footer>
+
+</div>
+
+</body>
+</html>
