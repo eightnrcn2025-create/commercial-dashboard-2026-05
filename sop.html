@@ -27,7 +27,7 @@ body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.65;
 }
-.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 
 .header {
   background: linear-gradient(180deg, var(--header-bg) 0%, var(--header-bg-2) 100%);
@@ -57,33 +57,28 @@ body {
 }
 .intro b { color: var(--text); }
 
-.section-title {
-  font-size: 11.5px; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--text-3); margin-bottom: 14px;
-  margin-top: 36px;
-}
-.section-title:first-child { margin-top: 0; }
-
 .choices {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 18px; margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 36px;
+  align-items: stretch;
 }
-@media (max-width: 700px) { .choices { grid-template-columns: 1fr; } }
-
-.choices.pro { grid-template-columns: 1fr; max-width: 540px; }
+@media (max-width: 980px) { .choices { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 620px) { .choices { grid-template-columns: 1fr; } }
 
 .choice {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 26px 28px;
+  padding: 26px 26px 22px;
   text-decoration: none;
   color: var(--text);
   transition: all 0.2s;
   position: relative;
   display: flex; flex-direction: column;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  min-height: 100%;
 }
 .choice:hover {
   border-color: var(--gold);
@@ -91,27 +86,39 @@ body {
   transform: translateY(-2px);
 }
 .choice .tag {
-  font-size: 10.5px; font-weight: 700;
+  font-size: 10px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 8px;
+  color: var(--gold); margin-bottom: 10px;
   display: flex; align-items: center; gap: 8px;
 }
 .choice .os {
   display: inline-block;
-  font-size: 10px; font-weight: 700;
-  padding: 2px 8px;
+  font-size: 9.5px; font-weight: 700;
+  padding: 2px 7px;
   background: rgba(30, 90, 135, 0.1);
   color: var(--accent);
   border-radius: 10px;
   letter-spacing: 0.05em;
 }
 .choice h2 {
-  font-size: 20px; font-weight: 600;
-  margin-bottom: 12px; letter-spacing: 0.01em;
+  font-size: 19px; font-weight: 600;
+  margin-bottom: 10px; letter-spacing: 0.01em;
 }
-.choice p { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
-.choice ul { font-size: 12.5px; padding-left: 18px; color: var(--text-2); margin-bottom: 18px; flex: 1; }
-.choice ul li { margin: 3px 0; }
+.choice p {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+.choice ul {
+  font-size: 12.5px;
+  padding-left: 16px;
+  color: var(--text-2);
+  margin-bottom: 18px;
+  flex: 1;
+  line-height: 1.55;
+}
+.choice ul li { margin: 4px 0; }
 .choice .cta {
   display: inline-block;
   margin-top: auto;
@@ -119,7 +126,7 @@ body {
   background: var(--header-bg);
   color: var(--gold-soft);
   border-radius: 3px;
-  font-size: 11.5px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   font-weight: 600;
   text-transform: uppercase;
@@ -127,19 +134,22 @@ body {
 }
 
 .choice.recommended {
-  border-color: var(--gold);
+  border: 1px solid var(--gold);
+  background: linear-gradient(180deg, #fdf9ee 0%, var(--surface) 30%);
   position: relative;
 }
 .choice.recommended::before {
   content: '推荐 / 团队协作首选';
-  position: absolute; top: -12px; left: 22px;
+  position: absolute; top: -12px; left: 50%;
+  transform: translateX(-50%);
   background: var(--gold);
   color: white;
-  padding: 3px 10px;
-  font-size: 10px;
+  padding: 3px 12px;
+  font-size: 9.5px;
   letter-spacing: 0.1em;
   border-radius: 10px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .compare {
@@ -198,8 +208,6 @@ footer {
     <p>读完任何一版的 SOP，你会知道：每个阶段问 AI 什么、AI 会回什么、怎么判断 AI 做对了。</p>
   </div>
 
-  <div class="section-title">先选系统（自己电脑）</div>
-
   <div class="choices">
     <a href="./sop-lite-mac.html" class="choice">
       <div class="tag">Lite 版 <span class="os">macOS</span></div>
@@ -207,7 +215,7 @@ footer {
       <p>看板自动更新和数据抓取都在你 <b>Mac</b> 上。团队浏览器打开就能看。</p>
       <ul>
         <li>✅ 不花钱</li>
-        <li>✅ 设置简单（一台 Mac + 几条命令）</li>
+        <li>✅ 一台 Mac + launchd 调度</li>
         <li>⚠️ Mac 必须开着（合盖睡眠 OK）</li>
         <li>⚠️ 出差不带电脑 = 没更新</li>
       </ul>
@@ -220,27 +228,23 @@ footer {
       <p>看板自动更新和数据抓取都在你 <b>Windows PC</b> 上。用 Task Scheduler 调度。</p>
       <ul>
         <li>✅ 不花钱</li>
-        <li>✅ 设置简单（PowerShell + Task Scheduler）</li>
+        <li>✅ PowerShell + Task Scheduler</li>
         <li>⚠️ PC 必须开着（睡眠 OK 但休眠会停）</li>
         <li>⚠️ 跟 Mac 版限制一样</li>
       </ul>
       <span class="cta">看 Windows 版指南 →</span>
     </a>
-  </div>
 
-  <div class="section-title">想要全天候 / 团队随时刷新</div>
-
-  <div class="choices pro">
     <a href="./sop-vps.html" class="choice recommended">
       <div class="tag">Pro 版 <span class="os">Mac / Win 都行</span></div>
       <h2>常驻 VPS</h2>
-      <p>看板的"自动更新"和"团队远程触发刷新"跑在一台<b>云上小服务器</b>（VPS）上，你电脑关机/出差都不影响。多一层架构，更省心。</p>
+      <p>"自动更新"和"团队远程触发"跑在<b>云上 VPS</b>，电脑关机出差都不影响。</p>
       <ul>
         <li>✅ <b>你电脑关机也照样更新</b></li>
         <li>✅ <b>团队点刷新立刻拉新数据</b></li>
-        <li>✅ Mac / Windows 都可以（前 6 个阶段用对应 Lite 版，加阶段 7-8 即可）</li>
+        <li>✅ Mac / Windows 都可以</li>
         <li>⚠️ 一台便宜 VPS（5-10 美元/月）</li>
-        <li>⚠️ 多 2 个组件要设置</li>
+        <li>⚠️ 多 2 个组件要设</li>
       </ul>
       <span class="cta">看 Pro 版指南 →</span>
     </a>
