@@ -12,6 +12,10 @@ jobs:
   refresh:
     runs-on: [self-hosted, macOS]
     timeout-minutes: 8
+    permissions:
+      contents: write
     steps:
       - name: Run update script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: /Users/laoba/commercial-dashboard/run.sh

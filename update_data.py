@@ -505,6 +505,7 @@ const RETENTION = {json.dumps(RETENTION, ensure_ascii=False)};
     path.write_text(js, encoding='utf-8')
 
 def push_github(repo):
+    import os, base64
     try:
         subprocess.run(['git', '-C', str(repo), 'add', 'data.js'], check=True, capture_output=True)
         r = subprocess.run(['git', '-C', str(repo), 'diff', '--cached', '--quiet'], capture_output=True)
@@ -514,7 +515,17 @@ def push_github(repo):
         msg = f'auto: 数据更新 {datetime.now().strftime("%Y-%m-%d %H:%M")}'
         subprocess.run(['git', '-C', str(repo), '-c', 'user.name=eight', '-c', 'user.email=linnn.w14@gmail.com',
                        'commit', '-m', msg], check=True, capture_output=True)
-        subprocess.run(['git', '-C', str(repo), 'push'], check=True, capture_output=True, timeout=60)
+
+        # 优先用 GITHUB_TOKEN env（GitHub Actions runner 跑时有）
+        # 否则用本地 git 配置（launchd 跑时用 Keychain）
+        gh_token = os.environ.get('GITHUB_TOKEN')
+        push_cmd = ['git', '-C', str(repo), 'push']
+        if gh_token:
+            auth = base64.b64encode(f'x-access-token:{gh_token}'.encode()).decode()
+            push_cmd = ['git', '-C', str(repo),
+                        '-c', f'http.extraheader=AUTHORIZATION: basic {auth}',
+                        'push']
+        subprocess.run(push_cmd, check=True, capture_output=True, timeout=60)
         return True
     except subprocess.CalledProcessError as e:
         print(f'git error: {e.stderr.decode() if e.stderr else e}', file=sys.stderr)
