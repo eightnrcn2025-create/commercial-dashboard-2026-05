@@ -261,7 +261,8 @@ def main():
             return 2
 
         try:
-            daily = fetch_report(page, '1/7', '系统统计-报表', EARLIEST, yest)
+            # DAILY 抓到今天（admin 有当天滚动累计数据）
+            daily = fetch_report(page, '1/7', '系统统计-报表', EARLIEST, today)
             DAILY = [[r[0]] + [_num(x) for x in r[1:13]] for r in daily if len(r) >= 13]
             DAILY.sort(key=lambda r: r[0], reverse=True)
 
