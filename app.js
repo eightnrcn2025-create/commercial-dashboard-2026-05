@@ -208,11 +208,23 @@ function renderDayKPI(dateStr) {
 }
 
 const datePicker = document.getElementById('date-picker');
-// 用实际数据范围覆盖 HTML 里写死的 value / min / max
-// 默认选"前一天"（完整数据），避免今天的滚动累计被拿来对比误导
 datePicker.min = DATE_MIN;
 datePicker.max = DATE_MAX;
-const DEFAULT_DAY = shiftDate(DATE_MAX, -1);
+
+// 用"实际今天"作为按钮锚点（而不是 DATE_MAX），让"前一天"始终 = 昨天
+const TODAY_STR = (() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+})();
+
+// 把目标日期 clamp 到数据范围内（避免选到没数据的日期）
+function clampDate(d) {
+  return d > DATE_MAX ? DATE_MAX : d < DATE_MIN ? DATE_MIN : d;
+}
+
+// 默认显示"昨天"（最完整的数据），如果数据范围没到昨天，降级到 DATE_MAX
+const DEFAULT_DAY = clampDate(shiftDate(TODAY_STR, -1));
 datePicker.value = DEFAULT_DAY;
 
 datePicker.addEventListener('change', e => {
@@ -224,7 +236,8 @@ document.querySelectorAll('.date-bar button[data-shift]').forEach(btn => {
     document.querySelectorAll('.date-bar button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const shift = parseInt(btn.dataset.shift);
-    const target = shiftDate(DATE_MAX, shift);
+    // shift = 0  → 今天 / shift = -1 → 昨天 / shift = -7 → 7 天前
+    const target = clampDate(shiftDate(TODAY_STR, shift));
     datePicker.value = target;
     renderDayKPI(target);
   });
