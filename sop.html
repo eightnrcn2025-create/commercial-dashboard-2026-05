@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>商业看板 · 运维 SOP</title>
+<title>商业看板搭建 SOP · 从零到上线</title>
 <style>
 :root {
   --bg: #f5f6f8;
@@ -28,16 +28,15 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue",
                "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg); color: var(--text);
   font-feature-settings: "tnum" 1;
   -webkit-font-smoothing: antialiased;
   line-height: 1.65;
 }
 .layout {
   display: grid;
-  grid-template-columns: 240px 1fr;
-  max-width: 1400px;
+  grid-template-columns: 260px 1fr;
+  max-width: 1440px;
   margin: 0 auto;
 }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
@@ -45,129 +44,84 @@ body {
 .header {
   grid-column: 1 / -1;
   background: linear-gradient(180deg, var(--header-bg) 0%, var(--header-bg-2) 100%);
-  color: #fff;
-  padding: 28px 40px 22px;
-  position: relative;
+  color: #fff; padding: 30px 44px 24px; position: relative;
 }
 .header::after {
-  content: '';
-  position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
   background: linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 14%, transparent 50%);
 }
 .header h1 {
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  font-size: 24px; font-weight: 500; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 14px;
 }
 .header h1::before {
-  content: '';
-  width: 3px; height: 24px;
-  background: var(--gold);
-  border-radius: 1px;
+  content: ''; width: 3px; height: 26px;
+  background: var(--gold); border-radius: 1px;
 }
 .header .sub {
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 8px;
-  margin-left: 17px;
-  letter-spacing: 0.05em;
+  font-size: 12px; color: rgba(255, 255, 255, 0.5);
+  margin-top: 10px; margin-left: 17px; letter-spacing: 0.05em;
 }
 
 nav.toc {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 28px 20px 28px 40px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  padding: 30px 18px 30px 44px;
   border-right: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 13px;
+  background: var(--surface); font-size: 13px;
 }
 @media (max-width: 900px) {
   nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
 }
 nav.toc .toc-title {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text-3);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 10.5px; font-weight: 700; color: var(--text-3);
+  letter-spacing: 0.1em; text-transform: uppercase;
   margin-bottom: 14px;
 }
-nav.toc ol {
-  list-style: none;
-  counter-reset: tocnum;
-}
-nav.toc li {
-  counter-increment: tocnum;
-  margin: 4px 0;
-}
+nav.toc ol { list-style: none; counter-reset: tocnum; }
+nav.toc li { counter-increment: tocnum; margin: 4px 0; }
 nav.toc a {
-  display: block;
-  padding: 6px 10px 6px 28px;
-  color: var(--text-2);
-  text-decoration: none;
-  border-radius: 3px;
-  position: relative;
-  transition: all 0.15s;
+  display: block; padding: 6px 10px 6px 32px;
+  color: var(--text-2); text-decoration: none;
+  border-radius: 3px; position: relative; transition: all 0.15s;
 }
 nav.toc a::before {
   content: counter(tocnum, decimal-leading-zero);
-  position: absolute;
-  left: 6px;
-  color: var(--text-3);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  position: absolute; left: 6px;
+  color: var(--text-3); font-size: 10.5px;
+  font-weight: 600; letter-spacing: 0.04em;
 }
-nav.toc a:hover {
-  background: var(--surface-alt);
-  color: var(--text);
-}
+nav.toc a:hover { background: var(--surface-alt); color: var(--text); }
 
-main {
-  padding: 36px 48px 80px;
-  max-width: 1000px;
-}
-@media (max-width: 900px) { main { padding: 24px 20px 60px; } }
+main { padding: 40px 52px 80px; max-width: 1000px; }
+@media (max-width: 900px) { main { padding: 28px 22px 60px; } }
 
-section { margin-bottom: 48px; scroll-margin-top: 24px; }
+section { margin-bottom: 56px; scroll-margin-top: 24px; }
 section h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: 0.01em;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
+  font-size: 19px; font-weight: 600; color: var(--text);
+  letter-spacing: 0.01em; margin-bottom: 18px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: baseline; gap: 12px;
 }
 section h2 .num {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.1em;
-  font-feature-settings: "tnum" 1;
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  letter-spacing: 0.1em; font-feature-settings: "tnum" 1;
 }
 section h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-top: 28px;
-  margin-bottom: 10px;
-  letter-spacing: 0.02em;
+  font-size: 15px; font-weight: 600; color: var(--text);
+  margin-top: 30px; margin-bottom: 10px; letter-spacing: 0.02em;
+}
+section h4 {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  margin-top: 18px; margin-bottom: 8px;
+  letter-spacing: 0.04em; text-transform: uppercase;
 }
 
 p { margin-bottom: 12px; color: var(--text); font-size: 14px; }
-p.note { color: var(--text-2); font-size: 13px; }
+p.lead { font-size: 15px; color: var(--text-2); margin-bottom: 18px; }
 
 ul, ol { padding-left: 22px; margin-bottom: 14px; font-size: 14px; }
 ul li, ol li { margin: 4px 0; }
+ul ul, ol ol { margin-top: 4px; margin-bottom: 4px; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -177,119 +131,102 @@ code {
   font-size: 12.5px;
   background: var(--surface-alt);
   border: 1px solid var(--border);
-  padding: 1px 6px;
-  border-radius: 3px;
+  padding: 1px 6px; border-radius: 3px;
   color: var(--text);
 }
-
 pre {
-  background: var(--code-bg);
-  color: var(--code-fg);
-  padding: 14px 18px;
-  border-radius: 4px;
-  overflow-x: auto;
+  background: var(--code-bg); color: var(--code-fg);
+  padding: 14px 18px; border-radius: 4px; overflow-x: auto;
   font-family: "SF Mono", "Monaco", "Consolas", monospace;
-  font-size: 12.5px;
-  line-height: 1.6;
-  margin: 12px 0 16px;
-  border-left: 2px solid var(--gold);
+  font-size: 12.5px; line-height: 1.6;
+  margin: 12px 0 16px; border-left: 2px solid var(--gold);
 }
-pre code {
-  background: transparent;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
-}
+pre code { background: transparent; border: none; padding: 0; color: inherit; font-size: inherit; }
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 18px 22px;
-  margin: 14px 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 18px 22px; margin: 14px 0;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
-.card.warn {
-  background: #fbf5e8;
-  border-left: 2px solid var(--gold);
-}
-.card.danger {
-  background: #fbf1ef;
-  border-left: 2px solid var(--danger);
-}
-.card.success {
-  background: #eef7f1;
-  border-left: 2px solid var(--success);
-}
+.card.warn { background: #fbf5e8; border-left: 2px solid var(--gold); }
+.card.danger { background: #fbf1ef; border-left: 2px solid var(--danger); }
+.card.success { background: #eef7f1; border-left: 2px solid var(--success); }
+.card.decision { background: #eef2f7; border-left: 2px solid var(--accent); }
 .card .label {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-bottom: 6px;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 6px;
 }
 .card.warn .label { color: #80520d; }
 .card.danger .label { color: #803424; }
 .card.success .label { color: #1a5538; }
+.card.decision .label { color: #173a59; }
 
 table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  margin: 12px 0 16px;
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; margin: 12px 0 16px;
 }
 th, td {
-  padding: 10px 12px;
-  text-align: left;
+  padding: 11px 14px; text-align: left;
   border-bottom: 1px solid var(--border-2);
   vertical-align: top;
 }
 th {
-  background: var(--surface-alt);
-  color: var(--text-2);
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  background: var(--surface-alt); color: var(--text-2);
+  font-weight: 600; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
 }
 td code { font-size: 11.5px; }
 
 .flow {
-  background: var(--code-bg);
-  color: var(--code-fg);
-  padding: 18px 22px;
-  border-radius: 4px;
+  background: var(--code-bg); color: var(--code-fg);
+  padding: 18px 22px; border-radius: 4px;
   font-family: "SF Mono", "Monaco", monospace;
-  font-size: 11.5px;
-  line-height: 1.7;
-  white-space: pre;
-  overflow-x: auto;
+  font-size: 11.5px; line-height: 1.7;
+  white-space: pre; overflow-x: auto;
   margin: 12px 0 16px;
   border-left: 2px solid var(--gold);
 }
 
+.timeline {
+  position: relative; padding-left: 28px; margin: 12px 0 16px;
+}
+.timeline::before {
+  content: ''; position: absolute; left: 10px; top: 4px; bottom: 4px;
+  width: 1px; background: var(--border);
+}
+.timeline .step {
+  position: relative; margin-bottom: 18px;
+}
+.timeline .step::before {
+  content: ''; position: absolute; left: -23px; top: 6px;
+  width: 9px; height: 9px;
+  background: var(--gold); border-radius: 50%;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.timeline .step .step-title {
+  font-weight: 600; font-size: 14px; color: var(--text);
+}
+.timeline .step .step-body {
+  font-size: 13px; color: var(--text-2); margin-top: 4px;
+}
+
 .badge {
   display: inline-block;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 10px;
+  letter-spacing: 0.05em; text-transform: uppercase;
 }
-.badge.daily { background: rgba(45, 122, 85, 0.15); color: var(--success); }
-.badge.once { background: rgba(176, 140, 57, 0.18); color: #6b5224; }
-.badge.danger { background: rgba(168, 72, 61, 0.18); color: var(--danger); }
+.badge.decision { background: rgba(30, 90, 135, 0.15); color: var(--accent); }
+.badge.pitfall { background: rgba(168, 72, 61, 0.15); color: var(--danger); }
+.badge.tip { background: rgba(45, 122, 85, 0.15); color: var(--success); }
+.badge.hour { background: rgba(176, 140, 57, 0.18); color: #6b5224; }
 
 footer {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 28px 40px;
-  font-size: 11.5px;
-  color: var(--text-3);
-  border-top: 1px solid var(--border);
+  grid-column: 1 / -1; text-align: center;
+  padding: 30px 44px; font-size: 11.5px;
+  color: var(--text-3); border-top: 1px solid var(--border);
   letter-spacing: 0.05em;
 }
 </style>
@@ -299,422 +236,614 @@ footer {
 <div class="layout">
 
 <div class="header">
-  <h1>商业看板 · 运维 SOP</h1>
-  <div class="sub">DATA PIPELINE · OPS PLAYBOOK · TROUBLESHOOTING · LAST UPDATED 2026-06-03</div>
+  <h1>商业看板搭建 SOP</h1>
+  <div class="sub">FROM ZERO TO PRODUCTION · 选型 · 实施 · 避坑 · 复盘</div>
 </div>
 
 <nav class="toc">
   <div class="toc-title">目录</div>
   <ol>
-    <li><a href="#overview">系统概览</a></li>
-    <li><a href="#architecture">整体架构</a></li>
-    <li><a href="#urls">关键地址</a></li>
-    <li><a href="#daily">日常使用</a></li>
-    <li><a href="#ops">运维操作</a></li>
-    <li><a href="#troubleshoot">故障排查</a></li>
-    <li><a href="#credentials">凭证管理</a></li>
-    <li><a href="#modify">修改 / 扩展</a></li>
-    <li><a href="#rebuild">应急 / 重建</a></li>
-    <li><a href="#layout">文件结构</a></li>
+    <li><a href="#intro">写在前面</a></li>
+    <li><a href="#requirements">需求与边界</a></li>
+    <li><a href="#metrics">指标体系设计</a></li>
+    <li><a href="#scrape-design">数据抓取选型</a></li>
+    <li><a href="#auth">登录认证处理</a></li>
+    <li><a href="#scraper">脚本核心实现</a></li>
+    <li><a href="#dashboard">看板前端</a></li>
+    <li><a href="#hosting">托管 / 发布</a></li>
+    <li><a href="#schedule">自动化调度</a></li>
+    <li><a href="#remote-trigger">远程触发 + Worker</a></li>
+    <li><a href="#availability">高可用部署</a></li>
+    <li><a href="#perf">性能优化</a></li>
+    <li><a href="#pitfalls">踩过的坑（必看）</a></li>
+    <li><a href="#decisions">关键决策回顾</a></li>
+    <li><a href="#playbook">复刻这套的最短路径</a></li>
   </ol>
 </nav>
 
 <main>
 
 <!-- 1 -->
-<section id="overview">
-  <h2><span class="num">01</span>系统概览</h2>
-  <p>本系统是一个 <b>商业化指标可视化看板</b>，给团队（包括非技术同事）通过浏览器即时查看公司商业化数据。</p>
-  <p>整体定位：</p>
+<section id="intro">
+  <h2><span class="num">01</span>写在前面</h2>
+  <p class="lead">这份 SOP 不是"按这 30 步做就能拿到一模一样的系统"，而是 <b>一份决策记录 + 设计模式</b>。</p>
+  <p>读者预期：<b>非技术 / 半技术的项目负责人</b>，需要给团队/老板出一个数据看板，但不想找开发对接（开发太忙 / 太贵 / 太慢）。</p>
+  <p>这套方案的特点：</p>
   <ul>
-    <li><b>数据源</b>：公司后台 <code>admin1866</code>（内网 <code>.line.ccc</code> 域名）</li>
-    <li><b>数据获取</b>：用 Playwright headless Chrome 自动登录 + 抓表（绕过手动 admin 操作）</li>
-    <li><b>数据存储</b>：JS 文件 <code>data.js</code> 在 GitHub 公开仓库里</li>
-    <li><b>展示</b>：单页 HTML + ECharts，托管在 GitHub Pages</li>
-    <li><b>更新机制</b>：VPS cron + 用户点刷新 双触发，VPS runner + Mac runner 双承载</li>
+    <li><b>不依赖后端开发</b> — 数据从现有 admin 页面"扒"，不需要 API</li>
+    <li><b>不依赖运营商</b> — 全部用免费服务（GitHub / Cloudflare Workers 免费层）</li>
+    <li><b>不依赖你电脑常开</b> — 跑在云上 VPS</li>
+    <li><b>团队共享</b> — 公开 URL，谁都能看（也意味着数据本身公开，要权衡）</li>
   </ul>
-  <p>核心指标：8 个总览 KPI、自由区间对比、30 天趋势图、单游戏 TOP / 单机 TOP / 套餐 / 渠道 / LTV / 留存 共 7 个 tab。数据范围回溯到 <b>2025-09-01</b>（约 9 个月历史，自动归档不丢失）。</p>
+  <p>预期工期：<b>3-5 个工作日</b>（含调研、试错）。重做一遍熟手大约 1 天。</p>
 </section>
 
 <!-- 2 -->
-<section id="architecture">
-  <h2><span class="num">02</span>整体架构</h2>
+<section id="requirements">
+  <h2><span class="num">02</span>需求与边界</h2>
 
-  <div class="flow">
-                  团队任何人浏览器
-                        ↓
-            打开看板 URL / 点"刷新"按钮
-                        ↓
-              [Cloudflare Worker]
-              （持有 GITHUB_PAT secret，
-                前端代码里不出现 PAT）
-                        ↓ POST
-              [GitHub Actions API]
-              workflow_dispatch / cron 触发
-                  ↙          ↘
-       [Mac runner]      [VPS runner ← 主力]
-       (备份, Mac 开机时)  (24×7 在线)
-                  ↘          ↙
-              update_data.py
-              （Playwright 登录 admin1866 → 抓 13 张报表 →
-                合并归档 → 生成 data.js）
-                        ↓
-              git push (用 GITHUB_TOKEN env)
-                        ↓
-              GitHub Pages 重建（约 50 秒）
-                        ↓
-              团队网页拿到新数据
+  <h3>2.1 跟需求方对齐 3 件事</h3>
+  <ol>
+    <li><b>核心指标是什么？</b>（不止"我都想看" — 列前 10 个最关键的）</li>
+    <li><b>谁来用？</b>（老板 / 运营团队 / 客户支持？粒度和呈现方式不一样）</li>
+    <li><b>需要多新？</b>（实时 vs 每天 vs 每小时？延迟接受度决定架构复杂度）</li>
+  </ol>
+
+  <div class="card decision">
+    <div class="label">我们这次的答案</div>
+    <ul>
+      <li>核心指标：商业化（充值、付费率、ARPU、付费分层、留存、LTV）</li>
+      <li>使用者：5-10 人运营/产品团队</li>
+      <li>更新延迟：30 分钟可接受（不是炒股 / 不需要秒级）</li>
+    </ul>
   </div>
 
-  <h3>关键组件</h3>
-  <table>
-    <thead><tr><th>组件</th><th>位置</th><th>职责</th></tr></thead>
-    <tbody>
-      <tr><td><b>前端看板</b></td><td>GitHub Pages（公开）</td><td>渲染数据、互动操作、远程触发刷新</td></tr>
-      <tr><td><b>data.js</b></td><td>GitHub repo 根目录</td><td>所有指标的快照，含 9 个月归档</td></tr>
-      <tr><td><b>update_data.py</b></td><td>Mac + VPS</td><td>登录 admin、抓数据、生成 data.js、push</td></tr>
-      <tr><td><b>Mac launchd</b></td><td>Mac，每 30 分钟</td><td>本地定时跑（Mac 开机时备份）</td></tr>
-      <tr><td><b>VPS cron</b></td><td>VPS，每 30 分钟</td><td>调用 Worker 触发 workflow_dispatch</td></tr>
-      <tr><td><b>VPS runner</b></td><td>VPS 后台服务</td><td>主力执行器，接 GitHub Actions 任务</td></tr>
-      <tr><td><b>Mac runner</b></td><td>Mac 后台服务</td><td>备份执行器</td></tr>
-      <tr><td><b>Cloudflare Worker</b></td><td>Cloudflare 全球边缘</td><td>持有 PAT，中转 dispatch 请求</td></tr>
-    </tbody>
-  </table>
+  <h3>2.2 边界（明确不做什么）</h3>
+  <ul>
+    <li>❌ 不做实时（&lt; 1 分钟）— 后台数据本身就是 30 分钟批处理</li>
+    <li>❌ 不做权限分级 — 团队都看同一份，没分角色</li>
+    <li>❌ 不做数据二次加工 — 看板只展示，不改数（怕和后台对不上）</li>
+    <li>❌ 不做移动端专门优化 — 响应式但不追求 mobile-first</li>
+  </ul>
+  <p class="note">明确边界很重要 — 后续有人提"能不能加 xxx"，你有依据说"超出范围，下一版再议"。</p>
 </section>
 
 <!-- 3 -->
-<section id="urls">
-  <h2><span class="num">03</span>关键地址</h2>
-  <table>
-    <thead><tr><th>用途</th><th>URL</th></tr></thead>
-    <tbody>
-      <tr><td><b>看板（公开）</b></td><td><a href="https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/" target="_blank">https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/</a></td></tr>
-      <tr><td>本 SOP</td><td><a href="https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/sop.html" target="_blank">https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/sop.html</a></td></tr>
-      <tr><td>GitHub 仓库</td><td><a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05" target="_blank">github.com/eightnrcn2025-create/commercial-dashboard-2026-05</a></td></tr>
-      <tr><td>GitHub Actions 日志</td><td><a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05/actions" target="_blank">actions/</a></td></tr>
-      <tr><td>Cloudflare Worker</td><td><code>https://dashboard-refresh.eight-nrcn-2025.workers.dev</code></td></tr>
-      <tr><td>Hostinger VPS 面板</td><td><a href="https://hpanel.hostinger.com/" target="_blank">hpanel.hostinger.com</a></td></tr>
-      <tr><td>数据后台 admin1866</td><td><code>http://18game.line.ccc:8001/admin1866/</code>（内网）</td></tr>
-    </tbody>
-  </table>
+<section id="metrics">
+  <h2><span class="num">03</span>指标体系设计</h2>
 
-  <h3>机器</h3>
+  <h3>3.1 三层结构</h3>
+  <ol>
+    <li><b>总览大盘</b>：5-8 个 KPI 卡，老板秒懂</li>
+    <li><b>分维度</b>：游戏 / 渠道 / 套餐 / 时间……每维度一个 tab</li>
+    <li><b>深度分析</b>：LTV / 留存 / 区间对比，给运营做决策用</li>
+  </ol>
+
+  <h3>3.2 推荐流程</h3>
+  <div class="timeline">
+    <div class="step">
+      <div class="step-title">a) 列指标候选 <span class="badge hour">~2h</span></div>
+      <div class="step-body">让需求方写 50 个想看的指标，可能重复 / 冗余 / 没数据，先不评判</div>
+    </div>
+    <div class="step">
+      <div class="step-title">b) 跟后台逐项对齐 <span class="badge hour">~4h</span></div>
+      <div class="step-body">每个指标标"后台已有 / 派生可算 / 待新建"，估出工作量分布</div>
+    </div>
+    <div class="step">
+      <div class="step-title">c) 精简到 30-50 项 <span class="badge hour">~1h</span></div>
+      <div class="step-body">把冗余 / 边缘指标砍掉。砍 30% 通常没人不舒服</div>
+    </div>
+    <div class="step">
+      <div class="step-title">d) 输出指标 → 后台位置 映射表（CSV）</div>
+      <div class="step-body">这张表是后续所有工作的"宪法" — 实现时按这个对，需求方提新指标也按这个加</div>
+    </div>
+  </div>
+
+  <h3>3.3 经验：哪些指标"看着重要其实用得少"</h3>
   <table>
-    <thead><tr><th>机器</th><th>地址 / 路径</th></tr></thead>
+    <thead><tr><th>指标</th><th>为什么砍</th></tr></thead>
     <tbody>
-      <tr><td><b>VPS</b>（主）</td><td>SSH：<code>ssh root@76.13.220.93</code>　代码：<code>/opt/commercial-dashboard</code>　Runner：<code>/opt/actions-runner</code></td></tr>
-      <tr><td><b>Mac</b>（备）</td><td>代码：<code>/Users/laoba/commercial-dashboard</code>　Runner：<code>~/actions-runner</code></td></tr>
+      <tr><td>人均订单数</td><td>客单价 + ARPPU 能推出来</td></tr>
+      <tr><td>人均剩余 G 点</td><td>总剩余分活跃/流失够用</td></tr>
+      <tr><td>登入游戏用户数</td><td>跟 DAU 高度重叠</td></tr>
+      <tr><td>付费分层 8 档</td><td>5 档（小/中/大/超/鲸鱼 R）就够</td></tr>
     </tbody>
   </table>
 </section>
 
 <!-- 4 -->
-<section id="daily">
-  <h2><span class="num">04</span>日常使用</h2>
+<section id="scrape-design">
+  <h2><span class="num">04</span>数据抓取选型</h2>
 
-  <h3>团队（包括非技术同事）</h3>
-  <div class="card success">
-    <div class="label">推荐用法</div>
-    <p>把看板 URL 加入浏览器收藏夹，每天打开。</p>
-    <ol>
-      <li>看 header 时间戳：🟢绿 = 数据新；🟡黄 = 数据 4 小时+ 没更新；🔴红 = 一天+ 没更新</li>
-      <li>点右上"刷新"按钮 → 强制触发远程拉取最新数据（约 2-3 分钟，按钮显示进度）</li>
-      <li>7 个 tab 切换看不同维度：总览 / 30 天趋势 / 网游 / 单机 / 套餐 / 渠道 / LTV·留存</li>
-      <li>总览里有"自由区间对比"，可以自己选两段日期对比</li>
-    </ol>
+  <h3>4.1 三条路</h3>
+  <table>
+    <thead><tr><th>方案</th><th>优势</th><th>劣势</th></tr></thead>
+    <tbody>
+      <tr><td><b>A. 找开发要 API</b></td><td>速度快、稳定</td><td>排期可能要等几周；改 admin 时容易漏改 API</td></tr>
+      <tr><td><b>B. 直接连数据库</b></td><td>最灵活</td><td>需要 DBA 配权限；指标口径要自己重写一遍（容易和 admin 对不上）</td></tr>
+      <tr><td><b>C. 浏览器自动化扒 admin 网页</b></td><td>不依赖任何人；口径天然和 admin 一致</td><td>慢；admin 改版会挂；要处理多层登录</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card decision">
+    <div class="label">我们的选择</div>
+    <p>选 C（浏览器自动化）。理由：<b>"非技术运营要做一个看板"</b>这个需求里，让 IT / 后端排期是最大风险点。C 方案完全自主，能立刻起步。</p>
   </div>
 
-  <h3>你（eight，作为维护者）</h3>
-  <p>正常情况下不需要做任何事 — 系统全自动。需要你介入的时机：</p>
-  <ul>
-    <li>数据 header 显示 🔴 红色（一天没更新）</li>
-    <li>团队反馈"刷新不出新数据" 且确认 GitHub 上 data.js 也没更新</li>
-    <li>需要新增指标 / 调整看板布局</li>
-    <li>admin1866 密码 / 2FA 重置</li>
-  </ul>
+  <h3>4.2 浏览器自动化工具选型</h3>
+  <table>
+    <thead><tr><th>工具</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td><b>Playwright</b></td><td>✅ 选这个。多浏览器、headless 友好、API 现代化、社区活跃</td></tr>
+      <tr><td>Puppeteer</td><td>只支持 Chromium，比 Playwright 稍老</td></tr>
+      <tr><td>Selenium</td><td>太老，配置复杂</td></tr>
+      <tr><td>BeautifulSoup / requests</td><td>纯 HTTP，但搞不定 JS 异步加载的表格</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <!-- 5 -->
-<section id="ops">
-  <h2><span class="num">05</span>运维操作</h2>
+<section id="auth">
+  <h2><span class="num">05</span>登录认证处理</h2>
 
-  <h3>5.1 立即手动触发一次刷新 <span class="badge daily">日常</span></h3>
-  <p>不想等 30 分钟自动跑，立刻拉一次新数据：</p>
-  <p><b>方式 A</b>：在网页右上角点"刷新"按钮（最简单，团队成员也能用）</p>
-  <p><b>方式 B</b>：从任何地方 curl 触发：</p>
-  <pre><code>curl -X POST https://dashboard-refresh.eight-nrcn-2025.workers.dev/dispatch</code></pre>
-  <p><b>方式 C</b>：在 GitHub Actions 网页手动 Run workflow：</p>
-  <p>访问 <a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05/actions/workflows/refresh.yml" target="_blank">actions/workflows/refresh.yml</a> → "Run workflow" → "Run"</p>
+  <p class="lead">这一步是 90% 的 admin 系统都要面对的，<b>而且通常比你想的复杂</b>。本项目 admin1866 有 <b>三层</b>：</p>
 
-  <h3>5.2 检查 runner 在线状态 <span class="badge daily">日常</span></h3>
-  <pre><code>gh api repos/eightnrcn2025-create/commercial-dashboard-2026-05/actions/runners --jq '.runners[] | "\(.name) | \(.status)"'</code></pre>
-  <p>期望看到两台都 <code>online</code>：</p>
-  <pre><code>laobadeMacBook-Pro.local-runner | online
-vps-srv1437966 | online</code></pre>
-
-  <h3>5.3 查看 workflow 跑得怎么样 <span class="badge daily">日常</span></h3>
-  <p>浏览器：<a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05/actions" target="_blank">github.com/.../actions</a></p>
-  <p>命令行（最近 5 次）：</p>
-  <pre><code>gh api 'repos/eightnrcn2025-create/commercial-dashboard-2026-05/actions/workflows/refresh.yml/runs?per_page=5' \
-  --jq '.workflow_runs[] | "\(.created_at) | \(.status) | \(.conclusion) | \(.runner_name // "...")"'</code></pre>
-
-  <h3>5.4 VPS 上手动跑一次脚本 <span class="badge once">排错</span></h3>
-  <pre><code>ssh root@76.13.220.93
-cd /opt/commercial-dashboard
-source .venv/bin/activate
-python update_data.py</code></pre>
-  <p>会打详细日志，每张报表抓多少行都能看到。</p>
-
-  <h3>5.5 重启 VPS runner（不响应工作流时）<span class="badge once">排错</span></h3>
-  <pre><code>ssh root@76.13.220.93
-cd /opt/actions-runner
-./svc.sh stop
-./svc.sh start
-./svc.sh status</code></pre>
-
-  <h3>5.6 查 Mac launchd 状态 <span class="badge once">排错</span></h3>
-  <pre><code>launchctl list | grep dashboard
-# 立刻触发一次
-launchctl start com.eight.dashboard-update
-# 看日志
-tail -50 /Users/laoba/commercial-dashboard/logs/stderr.log</code></pre>
-
-  <h3>5.7 查看 / 改 VPS cron <span class="badge once">排错</span></h3>
-  <pre><code>ssh root@76.13.220.93
-crontab -l   # 看当前定时
-crontab -e   # 编辑（默认 vi 编辑器）</code></pre>
-  <p>当前的定时（每 30 分钟）：</p>
-  <pre><code>*/30 * * * * curl -sS -X POST https://dashboard-refresh.eight-nrcn-2025.workers.dev/dispatch > /dev/null</code></pre>
-</section>
-
-<!-- 6 -->
-<section id="troubleshoot">
-  <h2><span class="num">06</span>故障排查</h2>
-
-  <h3>症状 ➜ 数据 N 天没更新（header 红色）</h3>
-  <ol>
-    <li>看 GitHub Actions <a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05/actions" target="_blank">页面</a>，最近 run 是 success 还是 failed</li>
-    <li>如果都是 failed，点进去看 logs，常见原因：
-      <ul>
-        <li><b>登录失败</b> → admin1866 改了密码或 2FA 重置：见 §7.1 更新凭证</li>
-        <li><b>ERR_EMPTY_RESPONSE</b> → admin1866 临时挂掉或限流；等 30 分钟再看（脚本已经有 6 次重试）</li>
-        <li><b>git push 失败</b> → workflow GITHUB_TOKEN 权限被改：见 §6.3</li>
-      </ul>
-    </li>
-    <li>如果 GitHub Actions 没有 run（连触发都没）：检查 VPS cron（§5.7）和 runner 状态（§5.2）</li>
-  </ol>
-
-  <h3>症状 ➜ runner 都 offline</h3>
-  <p>VPS runner：<code>ssh root@76.13.220.93 && cd /opt/actions-runner && ./svc.sh start</code></p>
-  <p>Mac runner：<code>cd ~/actions-runner && ./svc.sh start</code></p>
-  <p>如果 svc.sh 不工作，可能是 service 被 unload 了，重新装：<code>./svc.sh install root && ./svc.sh start</code>（Mac 上不要带 <code>root</code>）</p>
-
-  <h3>症状 ➜ Worker 返回 500 / 401</h3>
-  <p>多半是 Worker 的 GITHUB_PAT 过期或被 revoke：</p>
-  <ol>
-    <li>生成新 fine-grained PAT（GitHub Settings → Developer settings → Fine-grained tokens；Permissions: Actions = Read and write）</li>
-    <li>命令行更新 Worker Secret：</li>
-  </ol>
-  <pre><code>cd /Users/laoba/commercial-dashboard
-wrangler secret put GITHUB_PAT
-# 提示 "Enter a secret value:" 时粘贴新 PAT，回车</code></pre>
-
-  <h3>症状 ➜ Pages 重建特别慢（超过 5 分钟）</h3>
-  <p>GitHub 那边偶尔抽风。耐心等，或去 <a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05/actions" target="_blank">Actions 页面</a>看 <code>pages build and deployment</code> workflow 的状态。</p>
-
-  <h3>症状 ➜ 团队反馈"看板挂了"但你自己打开正常</h3>
-  <p>大概率是他们浏览器缓存。让他们：</p>
-  <ul>
-    <li>右上角点"刷新"按钮（带强制 cache-bust）</li>
-    <li>或 Chrome: Cmd+Shift+R 强制刷新</li>
-    <li>实在不行清浏览器缓存</li>
-  </ul>
-</section>
-
-<!-- 7 -->
-<section id="credentials">
-  <h2><span class="num">07</span>凭证管理</h2>
+  <h3>5.1 第一层：nginx Basic Auth</h3>
+  <p>访问 admin URL，浏览器弹"输入用户名密码"系统级对话框。这是 HTTP 协议层面的 Basic Authentication。</p>
+  <pre><code>// Playwright 写法：在 context 启动时塞凭证
+ctx = p.chromium.launch_persistent_context(
+    http_credentials={
+        'username': 'xxx',
+        'password': 'yyy'
+    }
+)</code></pre>
 
   <div class="card warn">
-    <div class="label">安全原则</div>
+    <div class="label">坑</div>
+    <p>很多教程只教你登录表单，<b>没提 Basic Auth 这层</b>。一开始登录失败时，先 curl 一下，如果返回 <code>401 + WWW-Authenticate: Basic</code>，就是这里。</p>
+  </div>
+
+  <h3>5.2 第二层：表单登录（账号 + 密码）</h3>
+  <p>过了 Basic Auth 后，是 admin 自己的登录页。常规填表 + submit。</p>
+
+  <h3>5.3 第三层：Google Authenticator 2FA</h3>
+  <p>表单还有第三个字段："谷歌验证码" — 6 位每 30 秒变。</p>
+  <p>处理方案：拿到原始 <b>TOTP 密钥</b>（base32 字符串，不是 6 位数字），用 <code>pyotp</code> 自动生成：</p>
+  <pre><code>import pyotp
+code = pyotp.TOTP(seed).now()  # 拿当前 6 位数字
+page.fill('input[placeholder="请输入谷歌验证码"]', code)</code></pre>
+
+  <div class="card warn">
+    <div class="label">如何拿到 TOTP 密钥</div>
     <ul>
-      <li>所有密码 / token <b>从不</b>明文进 git 仓库（GitHub 有 secret scanning，会拒绝 push）</li>
-      <li>Mac 上的 secrets：macOS Keychain + <code>.env</code> 文件（<code>chmod 600</code>，已 gitignored）</li>
-      <li>VPS 上的 secrets：<code>/opt/commercial-dashboard/.env</code>（<code>chmod 600</code>）</li>
-      <li>Worker 上的 secret：Cloudflare 自带的加密 Secret 系统</li>
+      <li>当初扫码绑定时<b>截图</b>过的可以直接用</li>
+      <li>没截过 → admin 里重置 2FA，新生成时<b>把密钥截下来</b>再扫码</li>
+      <li>找当初配置 admin 的人要</li>
     </ul>
   </div>
 
-  <h3>7.1 admin1866 凭证（5 个）</h3>
-  <p>位置：<code>~/commercial-dashboard/.env</code>（Mac 和 VPS 各一份）</p>
+  <h3>5.4 凭证存哪</h3>
+  <p>3 个候选，安全性递减：</p>
+  <ol>
+    <li><b>macOS Keychain</b>（最安全）— 但<b>背景服务读不了</b>（后面会踩到）</li>
+    <li><b>.env 文件 + chmod 600 + .gitignore</b>（次之）— 我们最终的方案</li>
+    <li><b>明文写代码里</b>（❌）— GitHub secret scanning 会拦下 push</li>
+  </ol>
+</section>
+
+<!-- 6 -->
+<section id="scraper">
+  <h2><span class="num">06</span>脚本核心实现</h2>
+
+  <h3>6.1 找出报表的真实 URL</h3>
+  <p>不要手猜 URL（我们一开始猜的 7 个全错）。正确做法：</p>
+  <ol>
+    <li>用 Playwright 登录进 admin</li>
+    <li>读 sidebar 所有 <code>&lt;a&gt;</code> 标签的 <code>lay-href</code>（layui 框架的路由属性）：</li>
+  </ol>
+  <pre><code>const links = page.evaluate(() => [...document.querySelectorAll('a[lay-href]')]
+  .map(a => ({ text: a.innerText.trim(), href: a.getAttribute('lay-href') }))
+);</code></pre>
+  <p>得到 50+ 行 <code>报表名 → URL</code> 映射，<b>挑你要的填到 REPORT_URLS dict 里</b>。</p>
+
+  <h3>6.2 抓表格通用流程</h3>
+  <div class="timeline">
+    <div class="step"><div class="step-title">page.goto(报表 URL)</div></div>
+    <div class="step"><div class="step-title">wait_for_function — 等 .layui-table-body 里有 tr</div></div>
+    <div class="step"><div class="step-title">JS 改 date input 的 value + dispatch change 事件</div></div>
+    <div class="step"><div class="step-title">JS 找 "搜索" 按钮 click</div></div>
+    <div class="step"><div class="step-title">智能等表格行数稳定（500ms 无变化）→ 比硬等 3.5s 快</div></div>
+    <div class="step"><div class="step-title">改分页 select 为 "3000/页"</div></div>
+    <div class="step"><div class="step-title">智能等表格稳定</div></div>
+    <div class="step"><div class="step-title">querySelectorAll('tbody tr') → 提取所有行</div></div>
+  </div>
+
+  <h3>6.3 处理"单页 3000 行上限"</h3>
+  <p>大表（比如 200 游戏 × 30 天 = 6000 行）超过单页上限，<b>分块抓</b>：</p>
+  <pre><code>def fetch_report_chunked(report, start, end, chunk_days=14):
+    all_rows = []
+    cur = start
+    while cur <= end:
+        chunk_end = min(cur + timedelta(days=chunk_days - 1), end)
+        rows = fetch_report(report, cur, chunk_end)
+        all_rows.extend(rows)
+        cur = chunk_end + timedelta(days=1)
+    return all_rows</code></pre>
+
+  <h3>6.4 增量归档（防数据丢失）</h3>
+  <p>admin 后台往往只保留 6-12 个月数据。<b>不要依赖后台保留历史</b> — 每次脚本跑都把新数据 merge 到 data.js 里现有的：</p>
+  <pre><code>def archive_merge(path, new_data):
+    existing = read_existing(path)
+    # 新数据按日期覆盖旧的；新里没有的，保留旧的
+    merged = {**old, **new_by_date}
+    return list(merged.values())</code></pre>
+  <p>效果：哪怕后台 1 年后清掉 2025-09 数据，你 data.js 里依然有。</p>
+
+  <h3>6.5 输出 JS 文件而不是 JSON</h3>
+  <p>静态网页拿数据有两种方式：</p>
   <table>
-    <thead><tr><th>Key</th><th>说明</th></tr></thead>
+    <thead><tr><th>方式</th><th>优劣</th></tr></thead>
     <tbody>
-      <tr><td><code>admin1866-basic-user</code></td><td>nginx Basic Auth 用户名</td></tr>
-      <tr><td><code>admin1866-basic-pass</code></td><td>nginx Basic Auth 密码</td></tr>
-      <tr><td><code>admin1866-username</code></td><td>admin 表单登录账号（如 "eight"）</td></tr>
-      <tr><td><code>admin1866-password</code></td><td>admin 表单登录密码</td></tr>
-      <tr><td><code>admin1866-totp-seed</code></td><td>Google Authenticator 密钥（base32 字符串）</td></tr>
+      <tr><td><code>fetch('data.json')</code></td><td>需要异步加载、loading 状态、错误处理</td></tr>
+      <tr><td><code>&lt;script src="data.js"&gt;</code></td><td>同步加载、全局变量直接用、简单</td></tr>
+    </tbody>
+  </table>
+  <p>选后者。脚本输出：</p>
+  <pre><code>const SNAPSHOT_AT = "2026-06-03T21:05:05";
+const DAILY = [...];
+const WANGYOU = [...];</code></pre>
+</section>
+
+<!-- 7 -->
+<section id="dashboard">
+  <h2><span class="num">07</span>看板前端</h2>
+
+  <h3>7.1 选型：ECharts vs 其他</h3>
+  <table>
+    <thead><tr><th>方案</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td><b>ECharts</b></td><td>✅ 选这个。百度开源、中文文档、tooltip 默认中文化、移动端 OK、免费</td></tr>
+      <tr><td>Chart.js</td><td>更轻量但功能少，复杂图（如桑基图）做不了</td></tr>
+      <tr><td>D3.js</td><td>太底层，自己拼太累</td></tr>
+      <tr><td>Recharts / Plotly</td><td>都要 React，单文件方案不合适</td></tr>
     </tbody>
   </table>
 
-  <p><b>admin 改密码后怎么更新</b>：</p>
-  <pre><code># Mac 上
-open -t /Users/laoba/commercial-dashboard/.env
-# 编辑 admin1866-password=新密码，保存
+  <h3>7.2 架构：单 HTML + 3 个 JS 文件</h3>
+  <pre><code>index.html       结构 + CSS（视觉）
+data.js          数据（脚本生成、覆盖）
+app.js           交互逻辑（tab 切换、图表渲染、日期对比）
+config.js        Worker URL 配置（手填一次）</code></pre>
+  <p><b>不用框架</b>（React / Vue）— 单文件 + ECharts CDN 已经够用，省去 build 工具的复杂度。</p>
 
-# VPS 上
-ssh root@76.13.220.93
-nano /opt/commercial-dashboard/.env   # 改对应行
-chmod 600 /opt/commercial-dashboard/.env</code></pre>
+  <h3>7.3 视觉风格</h3>
+  <ul>
+    <li>深海军蓝 header + 暗金 accent — "执行级"质感（比饱和 SaaS 蓝高级）</li>
+    <li>大写英文小标题 + 中文副注 — 编辑/咨询报告风</li>
+    <li>tabular numerals (font-feature-settings: "tnum") — 数字等宽对齐</li>
+    <li>少用饱和色 — 同色系深浅区分系列</li>
+  </ul>
 
-  <p><b>admin 重置 2FA 后</b>：拿到新的 TOTP 密钥（不是 6 位数字，是初始扫码时的那串字母数字），同样改 <code>admin1866-totp-seed</code> 那一行。</p>
-
-  <h3>7.2 GitHub PAT</h3>
-  <p>位置：Cloudflare Worker 的 Secret，<code>GITHUB_PAT</code></p>
-  <p>类型：fine-grained PAT，作用域 <code>actions: Read and write</code>，只对这一个 repo</p>
-  <p>更新方式：见 §6.3</p>
-
-  <h3>7.3 Cloudflare 账号</h3>
-  <p>邮箱：<code>Eight.nrcn.2025@gmail.com</code>　登录 <a href="https://dash.cloudflare.com/" target="_blank">dash.cloudflare.com</a></p>
-  <p>wrangler 命令行：已用 OAuth 授权过（<code>wrangler whoami</code> 验证）</p>
-
-  <h3>7.4 Hostinger VPS</h3>
-  <p>面板：<a href="https://hpanel.hostinger.com/" target="_blank">hpanel.hostinger.com</a></p>
-  <p>SSH：<code>ssh root@76.13.220.93</code>　root 密码在 Hostinger 面板可以重设</p>
+  <h3>7.4 交互必备</h3>
+  <ol>
+    <li><b>日期选择器</b>：默认显示昨天（完整数据），可切到任意日</li>
+    <li><b>区间对比</b>：本期 vs 对比期，预设 + 自由日期</li>
+    <li><b>时间区间切换</b>：每个 tab 顶部 7天/30天/自定义</li>
+    <li><b>tooltip 信息密度高</b>：hover 一个点出所有相关指标</li>
+    <li><b>刷新按钮</b>：强制 cache-bust，避免老旧浏览器拿缓存</li>
+  </ol>
 </section>
 
 <!-- 8 -->
-<section id="modify">
-  <h2><span class="num">08</span>修改 / 扩展</h2>
+<section id="hosting">
+  <h2><span class="num">08</span>托管 / 发布</h2>
 
-  <h3>8.1 加一个新指标到看板</h3>
-  <ol>
-    <li>判断这个指标在 admin1866 的哪个页面（查 <code>商业化看板指标-精简版.csv</code> 的"后台位置"列）</li>
-    <li>如果脚本已经抓那张表 → 看是不是已经在 <code>data.js</code> 输出（可能只是前端没用上）</li>
-    <li>如果是新表：在 <code>update_data.py</code> 的 <code>REPORT_URLS</code> dict 加路径，<code>main()</code> 里加 <code>fetch_report</code> 调用，加 aggregator 函数</li>
-    <li>在 <code>index.html</code> 加一个 KPI 卡 / chart 容器</li>
-    <li>在 <code>app.js</code> 写渲染逻辑</li>
-    <li>commit + push，VPS 下次跑就会出数</li>
-  </ol>
+  <h3>8.1 静态托管选型</h3>
+  <table>
+    <thead><tr><th>方案</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td><b>GitHub Pages</b></td><td>✅ 选这个。免费、自动 CDN、绑域名简单、跟 Git workflow 一体</td></tr>
+      <tr><td>Cloudflare Pages</td><td>类似，速度更快，但要单独账号</td></tr>
+      <tr><td>Vercel / Netlify</td><td>类似，对前端框架友好但本项目用不上</td></tr>
+      <tr><td>自己买 VPS 跑 nginx</td><td>没必要 — 看板就是几个静态文件</td></tr>
+    </tbody>
+  </table>
 
-  <h3>8.2 改更新频率</h3>
-  <p><b>变更 VPS cron</b>：</p>
-  <pre><code>ssh root@76.13.220.93
-crontab -e
-# 改 */30 (每 30 分钟) 为 */15 / */10 / */5 等</code></pre>
-  <p><b>变更 Mac launchd</b>：编辑 <code>com.eight.dashboard-update.plist</code> 里的 <code>StartInterval</code>（秒数）然后：</p>
-  <pre><code>launchctl unload ~/Library/LaunchAgents/com.eight.dashboard-update.plist
-cp /Users/laoba/commercial-dashboard/com.eight.dashboard-update.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.eight.dashboard-update.plist</code></pre>
+  <h3>8.2 数据存哪</h3>
+  <p>data.js 跟代码一起放仓库。GitHub Pages 服务的文件 = repo 的文件。</p>
 
   <div class="card warn">
-    <div class="label">注意</div>
-    <p>频率太高（&lt; 5 分钟）会给 admin1866 服务器压力 + 频繁触发 Pages 重建。<b>30 分钟是建议下限</b>。</p>
+    <div class="label">权衡</div>
+    <p>这意味着 <b>数据是公开的</b>（repo 是 public，Pages 才免费）。决策时要跟需求方说清。我们项目里数据虽然是公司商业指标，但不属于高度机密 — 接受了。</p>
+    <p>如果数据高度敏感，要么：</p>
+    <ul>
+      <li>用 Cloudflare Pages + Access（私有访问，要登录）</li>
+      <li>GitHub Pro（30/月，私有 repo 也能开 Pages）</li>
+      <li>自己起 nginx 在 VPS 上 + 基本认证</li>
+    </ul>
   </div>
-
-  <h3>8.3 加新维度数据（比如更长历史 / 单游戏每日趋势）</h3>
-  <p>修改 <code>update_data.py</code> 里 <code>EARLIEST</code>（默认 <code>2025-09-01</code>）或 <code>d30</code>（默认 30 天）的常量。</p>
-  <p>注意 data.js 文件大小会增长，太大（&gt; 3MB）会影响团队加载速度。</p>
-
-  <h3>8.4 给团队成员开 GitHub 协作权限（看 Actions 日志）</h3>
-  <p>GitHub repo → Settings → Collaborators → Add people → 输入对方 GitHub 用户名</p>
 </section>
 
 <!-- 9 -->
-<section id="rebuild">
-  <h2><span class="num">09</span>应急 / 重建</h2>
+<section id="schedule">
+  <h2><span class="num">09</span>自动化调度</h2>
 
-  <h3>9.1 整套 VPS 挂了，要从零重建</h3>
-  <p>步骤（在新 Ubuntu VPS 上 root 登录）：</p>
+  <h3>9.1 想清楚谁来跑脚本</h3>
+  <p>脚本需要：</p>
+  <ul>
+    <li>能上 admin1866 的网（内网 .line.ccc 域名）</li>
+    <li>能定时触发（每 30 分钟）</li>
+    <li>能 git push 到 GitHub</li>
+  </ul>
+  <p>候选机器：</p>
   <ol>
-    <li>SCP 把 <code>.env</code> 文件传到新 VPS 的 <code>/root/.env</code></li>
-    <li>跑一键安装脚本：</li>
-  </ol>
-  <pre><code>curl -sSL https://raw.githubusercontent.com/eightnrcn2025-create/commercial-dashboard-2026-05/main/setup_runner_linux.sh -o /tmp/setup.sh
-bash /tmp/setup.sh</code></pre>
-  <ol start="3">
-    <li>会问 RUNNER TOKEN（去 repo Settings → Actions → Runners → New self-hosted runner 拿）</li>
-    <li>装完加 cron：</li>
-  </ol>
-  <pre><code>(crontab -l 2>/dev/null; echo "*/30 * * * * curl -sS -X POST https://dashboard-refresh.eight-nrcn-2025.workers.dev/dispatch > /dev/null") | crontab -</code></pre>
-
-  <h3>9.2 Mac 换新机器</h3>
-  <p>同样思路：</p>
-  <ol>
-    <li>装 Python 3 + git（macOS 自带）+ <a href="https://nodejs.org" target="_blank">Node.js</a></li>
-    <li><code>git clone https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05.git /Users/&lt;new-user&gt;/commercial-dashboard</code></li>
-    <li>复制旧 Mac 的 <code>.env</code> 文件到新位置（或重跑 <code>migrate_secrets.py</code>）</li>
-    <li>跑 <code>./setup.sh</code> 装 venv + playwright + chromium</li>
-    <li>跑 <code>./run.sh</code> 测试一次</li>
-    <li>装 launchd（<code>./install_cron.sh</code>）</li>
-    <li>装 Mac runner（<code>./setup_runner.sh &lt;token&gt;</code>）</li>
+    <li>你的 Mac（开机时能跑，关机就停）</li>
+    <li>云上 VPS（24×7 在线，但通常公网，访问不了内网）</li>
+    <li>公司服务器（24×7 + 在内网，但要 IT 配合）</li>
   </ol>
 
-  <h3>9.3 Cloudflare Worker 整个挂了</h3>
-  <pre><code>cd /Users/laoba/commercial-dashboard
-wrangler deploy
-wrangler secret put GITHUB_PAT  # 重新设</code></pre>
+  <h3>9.2 调度工具</h3>
+  <table>
+    <thead><tr><th>平台</th><th>工具</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td>macOS</td><td><b>launchd</b></td><td>系统原生，支持休眠唤醒</td></tr>
+      <tr><td>Linux</td><td><b>cron</b></td><td>最普及，简单可靠</td></tr>
+      <tr><td>云端</td><td>GitHub Actions cron</td><td>免费但 runner 在公网 — 内网数据源用不上</td></tr>
+    </tbody>
+  </table>
 
-  <h3>9.4 GitHub repo 误删 / 历史搞乱了</h3>
-  <p>本地 Mac 和 VPS 都有完整代码。新建 GitHub repo，</p>
-  <pre><code>cd /Users/laoba/commercial-dashboard
-git remote set-url origin https://github.com/&lt;new-org&gt;/&lt;new-repo&gt;.git
-git push -u origin main --force</code></pre>
-  <p>然后改 <code>cloudflare-worker.js</code> 里的 REPO 字符串、<code>config.js</code> 里的 WORKER_URL（不变）、Pages 开启。</p>
+  <h3>9.3 我们的双重保险</h3>
+  <p><b>Mac launchd</b>（每 30 分钟）+ <b>VPS cron</b>（每 30 分钟）<b>+</b> <b>团队点刷新</b>（任意时刻） — 三种触发方式，任一在线即可。</p>
 </section>
 
 <!-- 10 -->
-<section id="layout">
-  <h2><span class="num">10</span>文件结构</h2>
-  <p>仓库根目录主要文件：</p>
-  <pre><code>commercial-dashboard-2026-05/
-├── index.html                          # 看板主页
-├── app.js                              # 看板交互逻辑（ECharts、tab、范围对比）
-├── data.js                             # 数据快照（脚本生成；含 9 个月历史）
-├── config.js                           # Cloudflare Worker URL 配置
-├── sop.html                            # 本 SOP 文档
-│
-├── update_data.py                      # ⭐ 核心抓取脚本
-├── migrate_secrets.py                  # 一次性：keychain → .env
-├── run.sh                              # launchd / cron 调用入口
-├── setup.sh                            # 装 Python venv + Playwright（Mac）
-├── setup_runner.sh                     # Mac GitHub Actions runner 安装
-├── setup_runner_linux.sh               # Ubuntu VPS 一键安装
-├── install_cron.sh                     # 安装 Mac launchd 定时任务
-│
-├── cloudflare-worker.js                # Cloudflare Worker 源码
-├── wrangler.toml                       # wrangler 配置
-│
-├── .github/workflows/refresh.yml       # GitHub Actions 工作流（workflow_dispatch）
-├── com.eight.dashboard-update.plist    # Mac launchd 定时配置
-│
-├── 商业化看板指标-精简版.csv             # 指标 → 后台位置 映射表
-├── 商业化看板-技术待办.md                # 给技术的清单
-├── 团队使用说明.md                       # 给团队的使用说明
-├── AUTO-UPDATE.md                      # Mac 自动更新文档
-│
-└── .env                                # 🔒 凭证文件（gitignored）</code></pre>
+<section id="remote-trigger">
+  <h2><span class="num">10</span>远程触发 + Worker</h2>
 
-  <h3>看板 7 个 tab 对应的渲染函数</h3>
+  <p class="lead">这一节是设计上最绕、但最重要的一节。</p>
+
+  <h3>10.1 问题</h3>
+  <p>团队点"刷新"按钮，希望<b>立刻拉新数据</b>（而不是等下次 30 分钟）。怎么让浏览器触发"在 VPS / Mac 上跑脚本"？</p>
+
+  <h3>10.2 思路：GitHub Actions workflow_dispatch</h3>
+  <p>GitHub Actions 自带"手动触发"API：</p>
+  <pre><code>POST https://api.github.com/repos/{owner}/{repo}/actions/workflows/refresh.yml/dispatches
+Headers: Authorization: Bearer &lt;PAT&gt;</code></pre>
+  <p>workflow 跑在 <b>self-hosted runner</b>（我们的 Mac / VPS）上 — 解决了"内网访问"问题。</p>
+
+  <h3>10.3 问题：PAT 放哪？</h3>
+  <div class="card danger">
+    <div class="label">第一版失败的尝试</div>
+    <p>把 PAT 直接嵌入前端 <code>config.js</code>：</p>
+    <pre><code>const GITHUB_PAT = 'github_pat_xxx';</code></pre>
+    <p>结果：</p>
+    <ul>
+      <li>GitHub <b>secret scanning</b> 自动检测，<b>拒绝 push</b></li>
+      <li>就算 push 成功，PAT 在 public repo 里 = 全网可见</li>
+    </ul>
+  </div>
+
+  <h3>10.4 解决：Cloudflare Worker 当中间代理</h3>
+  <p>架构：</p>
+  <div class="flow">
+    [前端] --POST--&gt; [Cloudflare Worker] --POST + PAT--&gt; [GitHub API]
+                  ↑
+              env.GITHUB_PAT (Cloudflare 加密 secret)
+  </div>
+  <p>关键设计：</p>
+  <ul>
+    <li>Worker 代码本身 <b>不含 PAT</b>，只读 <code>env.GITHUB_PAT</code></li>
+    <li>PAT 用 <code>wrangler secret put GITHUB_PAT</code> 设入 Cloudflare 加密存储</li>
+    <li>前端只调 <code>POST https://&lt;worker&gt;.workers.dev/dispatch</code> — URL 公开 OK</li>
+    <li>同样的 Worker 也提供 <code>/status</code> 给前端轮询任务进度</li>
+  </ul>
+
+  <h3>10.5 为什么选 Cloudflare Worker（不是 AWS Lambda 等）</h3>
+  <ul>
+    <li>免费层：<b>100,000 请求/天</b>，完全够用</li>
+    <li>部署最简单：<code>wrangler deploy</code> 一行命令</li>
+    <li>全球边缘，延迟低</li>
+    <li>不需要绑定信用卡</li>
+  </ul>
+
+  <h3>10.6 Worker 代码（核心）</h3>
+  <pre><code>export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (url.pathname === '/dispatch') {
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.GITHUB_PAT}`,
+            'Accept': 'application/vnd.github+json',
+            ...
+          },
+          body: JSON.stringify({ ref: 'main' }),
+        }
+      );
+      return new Response(res.status === 204 ? 'OK' : 'error', { ... });
+    }
+  }
+};</code></pre>
+</section>
+
+<!-- 11 -->
+<section id="availability">
+  <h2><span class="num">11</span>高可用部署</h2>
+
+  <h3>11.1 双 runner 互为备份</h3>
+  <p>GitHub 允许同一 repo 注册<b>多个</b> self-hosted runner。任务来时<b>谁先空闲谁拿</b>，自带负载均衡。</p>
+  <ul>
+    <li><b>主力</b>：Hostinger VPS（Ubuntu 24.04，24×7 在线）</li>
+    <li><b>备份</b>：你的 Mac（开机时也接任务）</li>
+  </ul>
+
+  <h3>11.2 VPS 能上内网的特殊情况</h3>
+  <div class="card success">
+    <div class="label">幸运发现</div>
+    <p>本项目 admin1866 用的 <code>.line.ccc</code> 域名，<b>居然能从公网 Hostinger VPS 访问</b>（可能配了公网 CNAME / Anycast）。</p>
+    <p>正常情况下，公司内网域名公网不可达。如果你的项目内网完全封闭：</p>
+    <ul>
+      <li>要么找公司内一台 24×7 机器装 runner</li>
+      <li>要么搞 VPN 隧道（复杂，IT 配合）</li>
+      <li>要么用 Cloudflare Tunnel（IT 同意装）</li>
+    </ul>
+  </div>
+
+  <h3>11.3 workflow concurrency 防并发</h3>
+  <p>Mac 和 VPS 可能同时跑（cron + workflow 撞上），都 push 会冲突。在 workflow yml 里：</p>
+  <pre><code>concurrency:
+  group: refresh-data
+  cancel-in-progress: false</code></pre>
+  <p>保证<b>同一时间只有一个</b>在跑，新触发的排队等。</p>
+</section>
+
+<!-- 12 -->
+<section id="perf">
+  <h2><span class="num">12</span>性能优化</h2>
+
+  <h3>12.1 优化前 vs 优化后</h3>
   <table>
-    <thead><tr><th>Tab</th><th>函数</th><th>数据源</th></tr></thead>
+    <thead><tr><th>阶段</th><th>耗时</th></tr></thead>
     <tbody>
-      <tr><td>总览</td><td>renderDayKPI / renderRangeComparison</td><td>DAILY</td></tr>
-      <tr><td>30 天趋势</td><td>(直接 setOption)</td><td>DAILY</td></tr>
-      <tr><td>网游</td><td>renderWangyou</td><td>WANGYOU / WANGYOU_30D / GAMES_DAILY</td></tr>
-      <tr><td>单机</td><td>renderDanji</td><td>DANJI / DANJI_30D / GAMES_DAILY</td></tr>
-      <tr><td>套餐</td><td>renderTaocan</td><td>TAOCAN / TAOCAN_30D / TAOCAN_DAILY</td></tr>
-      <tr><td>渠道</td><td>renderChannel</td><td>CHANNEL / CHANNEL_30D / CHANNEL_DAILY</td></tr>
-      <tr><td>LTV / 留存</td><td>(直接 setOption)</td><td>LTV / RETENTION</td></tr>
+      <tr><td>初版（朴素实现）</td><td>~3 分 30 秒</td></tr>
+      <tr><td>智能等待 + 智能轮询</td><td>~2 分 14 秒（-35%）</td></tr>
+      <tr><td>更多优化的潜力</td><td>~1 分 30 秒（理论）</td></tr>
     </tbody>
   </table>
+
+  <h3>12.2 已做的优化</h3>
+  <ol>
+    <li><b>智能等表格稳定</b>：行数 500ms 无变化即继续，替代死等 3.5s</li>
+    <li><b>智能轮询 Pages 重建</b>：每 2 秒 fetch data.js，发现 SNAPSHOT_AT 变了立刻 reload</li>
+    <li><b>合并 git pull/push</b>：脚本里用 GITHUB_TOKEN env 走 http extraheader auth（绕开 Keychain）</li>
+  </ol>
+
+  <h3>12.3 还能做的</h3>
+  <ul>
+    <li><b>消除冗余 fetch</b>：7d 数据是 30d 子集，前端可以自己切片</li>
+    <li><b>并行抓取</b>：多个 Playwright 页面共享 cookie，并发抓不同报表</li>
+    <li><b>抓取改 HTTP</b>：跳过 Playwright，直接 httpx + 解析 HTML（要逆向 admin 接口，复杂度高）</li>
+  </ul>
+</section>
+
+<!-- 13 -->
+<section id="pitfalls">
+  <h2><span class="num">13</span>踩过的坑 <span class="badge pitfall">必看</span></h2>
+
+  <p>按踩到时间顺序排，每个坑后面附"什么时候你也可能踩到"。</p>
+
+  <h3>① URL 路径全是猜的</h3>
+  <p>第一版 update_data.py 我自己想 URL：<code>/system/gameStat</code>、<code>/system/channelStat</code>...<b>跑起来全 404</b>。</p>
+  <p class="note"><b>正确做法</b>：先登进 admin，扒所有 <code>a[lay-href]</code> 拿到真实 URL 列表。</p>
+
+  <h3>② nginx Basic Auth 没认出来</h3>
+  <p>登录页表单填好但提交失败 — 一直以为是表单字段名错了，其实是<b>第一层 Basic Auth 没过</b>。</p>
+  <p class="note"><b>识别</b>：curl 一下，如果返回 <code>401 + WWW-Authenticate: Basic</code> 就是这层。</p>
+
+  <h3>③ TOTP 用户搞混"密钥"和"6 位数字"</h3>
+  <p>非技术用户经常误以为"Google Authenticator 上的 6 位数字"就是 TOTP 密钥 — 不是。<b>密钥是初始扫码时的那串字母数字</b>。</p>
+
+  <h3>④ macOS Keychain 后台读不了</h3>
+  <p>第一版用 keychain 存密码，本地手动跑 OK，<b>launchd 跑就报错 -25308</b>（"User interaction is not allowed"）。</p>
+  <p class="note"><b>原因</b>：launchd 启动的进程不在用户 UI session 里，没权限弹 keychain 解锁框。</p>
+  <p class="note"><b>解决</b>：改 <code>.env</code> 文件 + <code>chmod 600</code>，gitignored。</p>
+
+  <h3>⑤ GitHub secret scanning 拦 PAT</h3>
+  <p>把 PAT 嵌入 config.js push — GitHub 自动检测出来，<b>拒绝 push</b>（这是好事）。</p>
+  <p class="note"><b>解决</b>：用 Cloudflare Worker 代理。</p>
+
+  <h3>⑥ Self-hosted runner 用 osxkeychain credential helper push 失败</h3>
+  <p>同样的 keychain 后台访问限制，git push 也挂。</p>
+  <p class="note"><b>解决</b>：workflow 里 inject <code>secrets.GITHUB_TOKEN</code>，脚本里：</p>
+  <pre><code>auth = base64.b64encode(f'x-access-token:{TOKEN}'.encode()).decode()
+git -c "http.extraheader=AUTHORIZATION: basic {auth}" push</code></pre>
+
+  <h3>⑦ Cloudflare Workers 新 UI 默认创"Static Assets"型</h3>
+  <p>新版 CF UI 默认建"Worker + Static Assets"，<b>这种 Worker 不能加 Secret</b>。</p>
+  <p class="note"><b>解决</b>：用 <code>wrangler deploy</code> 命令行部署 — 100% 纯 Worker。</p>
+
+  <h3>⑧ data.js 包含 PAT 历史 — 即使删了 push 还是被拦</h3>
+  <p>第一次 push 失败后改了代码再 push，<b>还是被拦</b>。因为 git 历史里上一个 commit 含 PAT。</p>
+  <p class="note"><b>解决</b>：<code>git rebase --onto</code> 把含 PAT 的 commit 从历史里抹掉，force push。</p>
+
+  <h3>⑨ admin1866 偶尔 ERR_EMPTY_RESPONSE</h3>
+  <p>服务器看到 Playwright headless 流量会偶尔抽风。</p>
+  <p class="note"><b>解决</b>：登录函数加 6 次重试，间隔递增 5/8/11/14/17/20 秒。</p>
+
+  <h3>⑩ "选定日"默认显示成 6/1 而不是 6/2</h3>
+  <p>按钮逻辑用 <code>DATE_MAX - 1</code>，但 DATE_MAX 滞后于真实日期。</p>
+  <p class="note"><b>解决</b>：用浏览器 <code>new Date()</code> 作锚点，clamp 到数据范围内。</p>
+</section>
+
+<!-- 14 -->
+<section id="decisions">
+  <h2><span class="num">14</span>关键决策回顾</h2>
+
+  <table>
+    <thead><tr><th>决策点</th><th>选了</th><th>没选</th><th>事后看</th></tr></thead>
+    <tbody>
+      <tr><td>数据获取方式</td><td>Playwright</td><td>找开发要 API / 直连数据库</td><td>✅ 自主可控，1 周搞定 vs 找开发可能要 1 个月</td></tr>
+      <tr><td>前端框架</td><td>原生 HTML/JS + ECharts</td><td>React + Recharts</td><td>✅ 单文件部署省心，不用 build</td></tr>
+      <tr><td>托管</td><td>GitHub Pages（公开）</td><td>GitHub Pro 私有 Pages</td><td>⚠️ 数据公开，要跟需求方对齐</td></tr>
+      <tr><td>调度</td><td>VPS cron + Mac launchd 双重</td><td>只用一个</td><td>✅ 双重保险，Mac 关机不影响</td></tr>
+      <tr><td>远程触发</td><td>Cloudflare Worker 代理</td><td>PAT 嵌入前端</td><td>✅ 唯一安全的方案</td></tr>
+      <tr><td>凭证存储</td><td>.env 文件</td><td>macOS Keychain</td><td>✅ 后台 runner 友好</td></tr>
+      <tr><td>历史数据</td><td>客户端 archive_merge</td><td>依赖后台保留</td><td>✅ 防数据丢失</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 15 -->
+<section id="playbook">
+  <h2><span class="num">15</span>复刻这套的最短路径</h2>
+
+  <p class="lead">如果你拿到这份 SOP 要给另一个公司搭个类似系统，按这个顺序：</p>
+
+  <div class="timeline">
+    <div class="step">
+      <div class="step-title">Day 1 上午：需求 + 调研 <span class="badge hour">4h</span></div>
+      <div class="step-body">跟需求方对齐指标 + 边界；拿到 admin 账号；浏览器里点过所有报表，确认数据完整度</div>
+    </div>
+    <div class="step">
+      <div class="step-title">Day 1 下午：指标精简 + URL 扒取 <span class="badge hour">4h</span></div>
+      <div class="step-body">输出指标 → 后台位置 CSV；Playwright 扒 sidebar 所有 lay-href</div>
+    </div>
+    <div class="step">
+      <div class="step-title">Day 2：脚本核心 <span class="badge hour">8h</span></div>
+      <div class="step-body">写 update_data.py：登录 + 抓 5-7 张关键表 + 聚合 + 生成 data.js</div>
+    </div>
+    <div class="step">
+      <div class="step-title">Day 3：前端 <span class="badge hour">8h</span></div>
+      <div class="step-body">写 index.html + app.js，3-5 个 tab，加 ECharts；上 GitHub Pages</div>
+    </div>
+    <div class="step">
+      <div class="step-title">Day 4 上午：自动化 <span class="badge hour">4h</span></div>
+      <div class="step-body">launchd / cron 调度本地跑；测试自动 push</div>
+    </div>
+    <div class="step">
+      <div class="step-title">Day 4 下午：远程触发 + VPS <span class="badge hour">4h</span></div>
+      <div class="step-body">Cloudflare Worker + GitHub Actions workflow + VPS runner（如果需要 Mac 关机仍可用）</div>
+    </div>
+    <div class="step">
+      <div class="step-title">Day 5：优化 + 文档 <span class="badge hour">8h</span></div>
+      <div class="step-body">性能优化（智能等待 / 增量归档）；写 SOP；交付给团队</div>
+    </div>
+  </div>
+
+  <div class="card decision">
+    <div class="label">如果你完全照抄这套</div>
+    <p>仓库 <a href="https://github.com/eightnrcn2025-create/commercial-dashboard-2026-05" target="_blank">github.com/eightnrcn2025-create/commercial-dashboard-2026-05</a> 是完整可参考的代码。具体文件用途见 §10 文件结构（在 <a href="#layout">运维 SOP</a> 里）。</p>
+  </div>
 </section>
 
 </main>
 
 <footer>
-  COMMERCIAL DASHBOARD · OPS SOP · 维护：eight · 2026-06-03 · v1.0
+  COMMERCIAL DASHBOARD · BUILD SOP · 维护：eight · 2026-06-03 · v1.0
 </footer>
 
 </div>
