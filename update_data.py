@@ -29,7 +29,24 @@ def fmt(d): return d.strftime('%Y-%m-%d')
 
 # =========== 钥匙串 + 登录 ===========
 
+_env_cache = None
+def _load_env_file():
+    global _env_cache
+    if _env_cache is not None: return _env_cache
+    env_path = Path(__file__).parent / '.env'
+    _env_cache = {}
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if '=' in line:
+                k, v = line.split('=', 1)
+                _env_cache[k.strip()] = v.strip()
+    return _env_cache
+
 def get_keychain(service):
+    # 优先从 .env 文件（后台 runner 友好），失败再 fall back 到 keychain
+    env = _load_env_file()
+    if service in env:
+        return env[service]
     return subprocess.check_output(
         ['security', 'find-generic-password', '-s', service, '-w']
     ).decode().strip()
