@@ -1,0 +1,5 @@
+name = "dashboard-refresh"
+main = "cloudflare-worker.js"
+compatibility_date = "2024-11-01"
+
+# 注意：不配置 [site] / [assets]，保证是纯 Worker（没有 Static Assets）
