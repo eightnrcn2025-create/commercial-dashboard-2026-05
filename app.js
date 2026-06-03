@@ -2,14 +2,72 @@
 const fmt = n => (n == null || n === '') ? '-' : (typeof n === 'number' ? n.toLocaleString('zh-CN', {maximumFractionDigits: 2}) : n);
 const fmtPct = n => (n == null) ? '-' : (n*100).toFixed(1) + '%';
 
-// 刷新按钮
+// 刷新按钮 — 优先走 GitHub Actions 远程触发新抓取；没配 PAT 时退回直接重载
 const refreshBtn = document.getElementById('refresh-btn');
+
+async function triggerGithubWorkflow(cfg, btnSpan) {
+  // 1. 调 workflow_dispatch
+  const dispatchRes = await fetch(`https://api.github.com/repos/${cfg.REPO}/actions/workflows/${cfg.WORKFLOW_FILE}/dispatches`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${cfg.GITHUB_PAT}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: JSON.stringify({ ref: 'main' }),
+  });
+  if (!dispatchRes.ok) throw new Error(`触发失败 HTTP ${dispatchRes.status}`);
+
+  // 2. 轮询：等 workflow 启动 + 跑完
+  btnSpan.textContent = '远程抓数据中';
+  const triggerTime = Date.now();
+  let runId = null;
+  // 等启动（最多 30 秒）
+  for (let i = 0; i < 15; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const runs = await fetch(`https://api.github.com/repos/${cfg.REPO}/actions/workflows/${cfg.WORKFLOW_FILE}/runs?per_page=5`, {
+      headers: { 'Authorization': `Bearer ${cfg.GITHUB_PAT}` }
+    }).then(r => r.json());
+    const latest = (runs.workflow_runs || []).find(r => new Date(r.created_at).getTime() >= triggerTime - 5000);
+    if (latest) { runId = latest.id; break; }
+  }
+  if (!runId) throw new Error('workflow 没在 30 秒内启动（runner 可能没在线）');
+
+  // 等完成（最多 6 分钟）
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 6000));
+    const run = await fetch(`https://api.github.com/repos/${cfg.REPO}/actions/runs/${runId}`, {
+      headers: { 'Authorization': `Bearer ${cfg.GITHUB_PAT}` }
+    }).then(r => r.json());
+    btnSpan.textContent = `远程跑中 (${run.status || '...'})`;
+    if (run.status === 'completed') {
+      if (run.conclusion !== 'success') throw new Error(`workflow 失败: ${run.conclusion}`);
+      // 3. 等 Pages 重建 (约 45 秒)
+      btnSpan.textContent = '等 Pages 重建';
+      await new Promise(r => setTimeout(r, 50000));
+      return true;
+    }
+  }
+  throw new Error('workflow 超过 6 分钟没完成');
+}
+
 if (refreshBtn) {
-  refreshBtn.addEventListener('click', () => {
+  refreshBtn.addEventListener('click', async () => {
     refreshBtn.classList.add('spinning');
-    refreshBtn.querySelector('span').textContent = '加载中';
-    // 加 ?t=时间戳 强制绕过浏览器缓存
-    setTimeout(() => { location.href = location.pathname + '?t=' + Date.now() + location.hash; }, 350);
+    const span = refreshBtn.querySelector('span');
+    span.textContent = '加载中';
+    const cfg = (typeof REFRESH_CONFIG !== 'undefined' && REFRESH_CONFIG.GITHUB_PAT) ? REFRESH_CONFIG : null;
+    if (cfg) {
+      try {
+        await triggerGithubWorkflow(cfg, span);
+      } catch (e) {
+        console.error('refresh', e);
+        alert('远程触发失败：' + e.message + '\n\n回退到普通刷新');
+      }
+    }
+    // 无论触发成功还是没配 PAT，最后强制 reload 拿最新
+    location.href = location.pathname + '?t=' + Date.now() + location.hash;
   });
 }
 

@@ -650,7 +650,8 @@ tr:hover { background: var(--surface-alt); }
 </div>
 
 <script>
-  // 给 data.js / app.js 加上当前时间戳，彻底绕开浏览器缓存
+  // 给 data.js / app.js / config.js 加上当前时间戳，彻底绕开浏览器缓存
+  document.write('<scr' + 'ipt src="config.js?t=' + Date.now() + '"></scr' + 'ipt>');
   document.write('<scr' + 'ipt src="data.js?t=' + Date.now() + '"></scr' + 'ipt>');
   document.write('<scr' + 'ipt src="app.js?t=' + Date.now() + '"></scr' + 'ipt>');
 </script>

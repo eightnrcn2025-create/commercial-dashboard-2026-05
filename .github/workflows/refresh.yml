@@ -1,0 +1,17 @@
+name: Refresh Dashboard Data
+
+on:
+  workflow_dispatch:
+
+# 同一时间只允许跑一个，重复触发排队等
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 8
+    steps:
+      - name: Run update script
+        run: /Users/laoba/commercial-dashboard/run.sh
