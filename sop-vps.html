@@ -272,7 +272,7 @@ footer {
   </ol>
   <div class="extra">
     <ol style="counter-reset: tocnum 8;">
-      <li><a href="#phase7">阶段 7: VPS 24×7</a></li>
+      <li><a href="#phase7">阶段 7: 服务器 24×7</a></li>
       <li><a href="#phase8">阶段 8: 远程触发 Worker</a></li>
       <li><a href="#use">团队使用</a></li>
       <li><a href="#tips">关键经验</a></li>
@@ -289,7 +289,7 @@ footer {
   <ul>
     <li>阶段 1-8 都是问 AI 即可</li>
     <li>每个阶段都告诉你：要做啥 / 给 AI 啥提示词 / AI 输出啥 / 怎么验证</li>
-    <li>Pro 版前 6 个阶段跟 <a href="./sop-lite.html">Lite 版</a> 一样，<b>阶段 7+8 是 Pro 独有</b>（VPS + Cloudflare Worker）</li>
+    <li>Pro 版前 6 个阶段跟 <a href="./sop.html">Lite 版</a> 一样，<b>阶段 7+8 是 Pro 独有</b>（多一台一直开着的服务器 + 一个让团队远程刷新的小中转）</li>
   </ul>
 
   <div class="card tip">
@@ -298,7 +298,7 @@ footer {
       <li>团队 ≥ 3 人，希望随时点刷新就能拿新数据（即使你 Mac 关机）</li>
       <li>老板可能晚上 10 点想看一眼今天的数</li>
       <li>你出差不带电脑也想让团队照常用</li>
-      <li>愿意花 5-10 美元/月养一台 VPS</li>
+      <li>愿意花 5-10 美元/月养一台云服务器</li>
     </ul>
   </div>
 </section>
@@ -314,8 +314,8 @@ footer {
   <ul>
     <li>GitHub 账号</li>
     <li>Cloudflare 账号（免费，<a href="https://dash.cloudflare.com/sign-up" target="_blank">这里注册</a>）</li>
-    <li>VPS 提供商账号 — 推荐 <b>Hostinger / DigitalOcean / Vultr / Linode</b>，最便宜 ~5 美元/月</li>
-    <li>公司 admin 后台账号 + 2FA 密钥</li>
+    <li>云服务器（也叫 VPS）提供商的账号 — 推荐 <b>Hostinger / DigitalOcean / Vultr / Linode</b>，最便宜 ~5 美元/月</li>
+    <li>公司后台的账号 + 密码 + 那个会变的验证码的密钥</li>
   </ul>
 
   <h3>2.3 给 AI 看 SOP</h3>
@@ -394,42 +394,39 @@ https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/sop-vps.html
 <section id="phase3">
   <h2><span class="num">05</span>阶段 3：写抓取脚本</h2>
   <div class="phase-meta">
-    <span>🎯 <b>目标</b>：脚本自动登录 admin、抓表、生成 data.js</span>
+    <span>🎯 <b>目标</b>：让程序自动登录后台、把报表数据抓下来、生成一个数据文件</span>
   </div>
 
-  <h3>5.1 先弄清楚 admin 的登录方式</h3>
-  <p>常见三层组合：</p>
+  <h3>5.1 先搞清楚你的后台是怎么登录的</h3>
+  <p>常见有三种"关卡"组合：</p>
   <ol>
-    <li>只表单</li>
-    <li>nginx Basic Auth（系统弹框）+ 表单</li>
-    <li>+ Google Authenticator 2FA</li>
+    <li>只有一个网页登录表单</li>
+    <li>先弹一个浏览器自带的小框（输用户名密码），过了才是网页登录表单</li>
+    <li>上面任意一种，再加一个每隔几十秒就变的 6 位验证码</li>
   </ol>
 
   <h3>5.2 提示词</h3>
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-帮我写 update_data.py：
-1. 登录 admin（URL 是 xxxx）
-   认证方式：[nginx Basic Auth + 表单登录 + Google Authenticator]
-2. 依次抓这些报表：[报表 URL 1] [报表 URL 2] ...
-3. 数据合并归档到 data.js
-   格式：const DAILY = [...]; const WANGYOU = [...];
+帮我写一个脚本，让它每次运行就自动做这几件事：
+1. 登录我的后台（网址是 xxxx）。登录有三关：先弹一个系统的"输用户名密码"小框 → 再填网页上的登录表单 → 最后填一个每隔几十秒就变的 6 位验证码。
+2. 按顺序打开这几个报表页面，把里面的数据抓下来：[报表 1 网址] [报表 2 网址] …
+3. 把数据存成一个数据文件；每次只把新增的并进去，老数据保留、不要覆盖。
 
-要求：
-- Playwright（不要 BeautifulSoup）
-- TOTP 用 pyotp 自动算
-- 密码从 .env 读，不硬编码
-- 增量归档：旧数据保留，新数据 merge
+几点说明：
+- 这些报表是打开后才慢慢加载出来的，请用"能等它真正加载完再抓"的办法，别用只读网页源码的简单抓取。
+- 那个会变的验证码，让脚本自己算，别让我每次手输。
+- 账号密码不要写死在代码里，单独存一个文件让脚本读。
 
-密码我用 .env 文件存（chmod 600）。</div>
+账号密码我自己保管（存在一个单独的、只有我能读的文件里），不会贴给你。</div>
 
   <div class="card warn">
     <div class="label">坑预警</div>
-    第一次大概率失败 — admin 反爬、超时、selector 不对……正常。<b>报错原样发 AI</b>，2-3 轮能修好。
+    第一次大概率失败 — 后台防抓取、超时、抓错了位置……都正常。<b>报错原样发给 AI 让它修</b>，一般 2-3 次就好。
   </div>
 
   <div class="check">
     <div class="label">验证</div>
-    <code>python update_data.py</code> → 生成新 data.js → 里面的数字跟你 admin 里看的对得上。
+    脚本跑完后会生成一个新的数据文件 → 里面的数字跟你后台里看到的对得上。
   </div>
 </section>
 
@@ -437,27 +434,27 @@ https://eightnrcn2025-create.github.io/commercial-dashboard-2026-05/sop-vps.html
 <section id="phase4">
   <h2><span class="num">06</span>阶段 4：看板前端</h2>
   <div class="phase-meta">
-    <span>🎯 <b>目标</b>：把 data.js 渲染成可互动看板</span>
+    <span>🎯 <b>目标</b>：把抓到的数据变成一个能点、能看的看板</span>
   </div>
 
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-帮我写看板前端，3 个文件：index.html + app.js + data.js（data.js 已有）。
+帮我把上一步抓到的数据做成一个看板网页。
 
-技术：
-- ECharts 画图
-- 不要 React/Vue — 单文件 HTML 直接打开就跑
-- "执行级" 风格：深海军蓝 header + 暗金 accent
+要求：
+- 用现成的图表库画图（你来选合适的），别用复杂的前端框架；做成一个打开就能看的单页网页。
+- 风格走"给老板看的高管范儿"：深海军蓝配暗金，干净利落。
+- 数据直接用上一步生成的那个数据文件。
 
-tab 结构按阶段 2 设计的来。
+页面按阶段 2 设计的 tab 来分。
 
-每个 tab 必备：
-1. 时间区间切换（近 7 天 / 近 30 天 / 自定义）
-2. 数据对比（本期 vs 对比期）
-3. 表格列点击排序</div>
+每个 tab 都要能：
+1. 切时间区间（近 7 天 / 近 30 天 / 自己选起止）
+2. 两个时期对比（本期 vs 上一期）
+3. 表格点列头能排序</div>
 
   <div class="check">
     <div class="label">验证</div>
-    浏览器双击 index.html → 所有 tab 和数据正常显示。
+    在浏览器里打开你的看板 → 所有 tab 和数据都能正常显示。
   </div>
 </section>
 
@@ -468,23 +465,18 @@ tab 结构按阶段 2 设计的来。
     <span>🎯 <b>目标</b>：团队浏览器能访问</span>
   </div>
 
-  <div class="card warn">
-    <div class="label">注意</div>
-    免费 GitHub Pages = 仓库要 public = 数据公开。跟需求方先对齐。
-  </div>
-
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-帮我：
-1. 在 GitHub 建 public 仓库（名字 commercial-dashboard）
-2. 把当前文件夹推上去（用 gh CLI）
-3. 开 GitHub Pages（main 分支根目录）
-4. 给我 Pages URL
+帮我把当前这个文件夹发布成一个网页，让团队用浏览器就能打开看：
+1. 在 GitHub 上建一个新项目（名字叫 commercial-dashboard，公开的就行）
+2. 把我这个文件夹整个传上去
+3. 打开 GitHub 自带的网页托管（GitHub Pages）
+4. 弄好后，把看板的网址直接发给我
 
-并建 .gitignore：.env / .venv/ / logs/ / __pycache__/</div>
+另外帮我设置好"哪些文件不要传到 GitHub"——尤其是存账号密码的那个文件，千万别传上去；临时文件和运行日志也都不用传。</div>
 
   <div class="check">
     <div class="label">验证</div>
-    打开 <code>https://&lt;你GH用户名&gt;.github.io/&lt;仓库名&gt;/</code> → 看板能用。
+    上一步 AI 会直接把你看板的网址发给你。点开它，看板能正常显示、能用就行。
   </div>
 </section>
 
@@ -495,142 +487,132 @@ tab 结构按阶段 2 设计的来。
     <span>🎯 <b>目标</b>：Mac 开机时也参与跑（作为 Pro 版的备份）</span>
   </div>
 
-  <p>跟 Lite 版一样，<b>但在 Pro 版里这一步是可选的</b>。VPS 已经 24×7 在跑，Mac 加上是双保险。</p>
+  <p>跟 Lite 版一样，<b>但在 Pro 版里这一步是可选的</b>。服务器已经 24×7 在跑，Mac 加上是双保险。</p>
 
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-帮我设 macOS launchd，update_data.py 每 30 分钟自动跑：
-- Mac 开机自动启动
-- 跑完自动 git push
-- 日志写 logs/stderr.log
+帮我把那个抓数据的脚本设成"每 30 分钟自动跑一次"（用 Mac 自带的定时功能就行）：
+- Mac 一开机就自动启动
+- 每次跑完自动把新数据上传
+- 留一份运行记录，方便排查
 
-项目路径：/Users/xxx/commercial-dashboard</div>
+我的项目就放在当前这个文件夹里。</div>
 </section>
 
 <!-- =========== Pro 独有 =========== -->
 
 <!-- 9 -->
 <section id="phase7">
-  <h2><span class="num">07+</span>阶段 7：VPS 24×7 跑 <span class="badge">Pro 独有</span></h2>
+  <h2><span class="num">07+</span>阶段 7：服务器 24×7 跑 <span class="badge">Pro 独有</span></h2>
   <div class="phase-meta">
     <span>🎯 <b>目标</b>：让 Mac 关机时也能自动更新</span>
   </div>
 
   <h3>7.1 先验证一个关键问题</h3>
   <div class="card danger">
-    <div class="label">VPS 必须能上你公司的 admin 后台</div>
-    <p>如果你公司 admin 在内网，VPS（公网）通常<b>访问不了</b>。先 SSH 到 VPS 跑：</p>
-    <pre><code>curl -I --max-time 5 http://&lt;你的 admin URL&gt;</code></pre>
+    <div class="label">服务器必须能访问到你公司的后台</div>
+    <p>如果你公司后台在内网（只有公司网络能进），那台云服务器在公网，通常<b>访问不了</b>。让 AI 带你登上服务器，跑一句测试命令，看能不能连上你的后台网址：</p>
+    <pre><code>curl -I --max-time 5 http://&lt;你的后台网址&gt;</code></pre>
     <ul>
-      <li>返回 <code>401</code> = ✅ 能上，继续</li>
-      <li>返回 <code>Could not resolve host</code> = ❌ 不行，换方案</li>
+      <li>返回一串带 <code>401</code> 的结果 = ✅ 能连上，继续</li>
+      <li>返回"找不到主机"之类的 = ❌ 连不上，得换方案</li>
     </ul>
-    <p><b>不行怎么办</b>：</p>
+    <p><b>连不上怎么办</b>：</p>
     <ul>
-      <li>选项 A：找公司内一台 24×7 的机器装 runner（最稳）</li>
-      <li>选项 B：让 IT 配 VPN / Cloudflare Tunnel（要 IT 配合）</li>
-      <li>选项 C：放弃 VPS 路线，回 <a href="./sop-lite.html">Lite 版</a></li>
+      <li>方案 A：在公司内部找一台一直开着的电脑来当这台"服务器"（最稳）</li>
+      <li>方案 B：让公司 IT 帮你把网络打通（需要 IT 配合）</li>
+      <li>方案 C：放弃服务器这条路，回 <a href="./sop.html">Lite 版</a></li>
     </ul>
   </div>
 
-  <h3>7.2 买一台便宜 VPS</h3>
-  <p>推荐 Hostinger 最便宜的 KVM 套餐（约 5 美元/月），或类似的。系统选 <b>Ubuntu 22.04 / 24.04</b>。</p>
+  <h3>7.2 买一台便宜的云服务器</h3>
+  <p>推荐 Hostinger 最便宜的套餐（约 5 美元/月），或类似的服务商。系统（操作系统）选 <b>Ubuntu</b> 就行。</p>
 
-  <h3>7.3 让 AI 装 runner</h3>
+  <h3>7.3 让 AI 帮你把服务器配好</h3>
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-我有一台 Ubuntu VPS（IP 是 x.x.x.x，root 可登录），帮我装上：
-1. Python 3 + venv
-2. Playwright + Chromium（含系统依赖）
-3. 把 commercial-dashboard 仓库 clone 到 /opt/
-4. 注册为 GitHub Actions self-hosted runner（你帮我去 GitHub 设置页面拿 token，或告诉我去哪点）
+我有一台云服务器（Ubuntu 系统，IP 是 x.x.x.x，能用管理员账号登录）。帮我在上面把"自动抓数据"需要的东西都装好，让它以后能自动跑那个抓取脚本：
+1. 装好运行脚本需要的程序和工具（具体装什么你来定）
+2. 把我的项目下载到这台服务器上
+3. 把它接上 GitHub，让 GitHub 能指挥这台服务器自动跑（如果要去 GitHub 拿个授权码，带我一步步弄）
 
-写一个一键安装脚本 setup_runner_linux.sh，scp 上去跑一次就行。
+最好给我一个"一键安装"的脚本，我传上服务器跑一次就装好。
 
-我先把 .env 文件 scp 到 VPS。</div>
+存账号密码的那个文件我会自己传到服务器上，不会贴给你。</div>
 
-  <h3>7.4 给 VPS 加 cron 让它每 30 分钟自己触发</h3>
+  <h3>7.4 让服务器每 30 分钟自己触发一次</h3>
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-VPS 上加一个 cron entry，每 30 分钟触发一次 workflow。
-（workflow 触发方法看下一步 Cloudflare Worker）</div>
+在这台服务器上设一个定时，让它每 30 分钟自动触发一次更新。
+（具体怎么触发，看下一步的"远程刷新"设置。）</div>
 
   <div class="check">
     <div class="label">验证</div>
     <ul>
-      <li>GitHub 上 Settings → Actions → Runners 能看到 VPS 在线</li>
-      <li>VPS 上 <code>./svc.sh status</code> 显示 running</li>
-      <li>等 30 分钟，看 GitHub 仓库 commit 历史有新的 "auto: 数据更新"</li>
+      <li>在 GitHub 的设置页里，能看到你这台服务器显示"在线"</li>
+      <li>在服务器上查一下，那个后台服务显示"正在运行"</li>
+      <li>等 30 分钟，去 GitHub 项目里看一眼，会自动多出一条"数据更新"的记录</li>
     </ul>
   </div>
 </section>
 
 <!-- 10 -->
 <section id="phase8">
-  <h2><span class="num">08+</span>阶段 8：Cloudflare Worker 远程触发 <span class="badge">Pro 独有</span></h2>
+  <h2><span class="num">08+</span>阶段 8：让团队能一键远程刷新 <span class="badge">Pro 独有</span></h2>
   <div class="phase-meta">
     <span>🎯 <b>目标</b>：团队点"刷新"按钮能立刻拉新数据（不等 30 分钟）</span>
   </div>
 
   <h3>8.1 思路</h3>
-  <p>团队浏览器 → <b>Cloudflare Worker</b>（小代理，免费）→ GitHub Actions API → VPS runner 跑 → push → Pages 重建。</p>
+  <p>团队点"刷新" → 一个免费的小中转服务 → 通知 GitHub → 你的服务器跑一遍抓取 → 上传 → 网页自动更新。整条链路大概是这样：</p>
 
   <div class="flow">
-[团队浏览器]
-    ↓ POST
-[Cloudflare Worker]（持有 GitHub PAT）
-    ↓ POST + PAT
-[GitHub Actions]
+[团队浏览器，点"刷新"]
     ↓
-[你 VPS 上的 runner 跑脚本]
-    ↓ push
-[Pages 重建] ≈ 2-3 分钟后团队看到新数据
+[免费的小中转服务]（替你保管"授权钥匙"）
+    ↓
+[GitHub]
+    ↓
+[你的服务器跑一遍抓取脚本]
+    ↓ 上传
+[网页自动更新] ≈ 2-3 分钟后团队看到新数据
   </div>
 
-  <h3>8.2 为什么不能直接前端 → GitHub？</h3>
-  <p>GitHub API 需要 PAT 认证，<b>PAT 不能放前端代码</b>（GitHub 自动检测就拦下 push 了）。所以中间加一个 Worker 当代理：</p>
+  <h3>8.2 为什么要绕这一圈，不能网页直接连 GitHub？</h3>
+  <p>因为通知 GitHub 需要一把"授权钥匙"，而<b>这把钥匙绝不能放进网页代码里</b>（任何人都能看到网页代码，钥匙一暴露就危险）。所以中间加一个小中转服务来替你保管钥匙：</p>
   <ul>
-    <li>PAT 存在 Worker 的加密 Secret 里</li>
-    <li>前端只调 Worker URL（公开的，没问题）</li>
-    <li>Worker 拿 PAT 去调 GitHub API</li>
+    <li>钥匙安全地存在中转服务里，外人看不到</li>
+    <li>网页只跟这个中转服务打交道（它是公开的，没关系）</li>
+    <li>由中转服务拿着钥匙去通知 GitHub</li>
   </ul>
 
   <h3>8.3 让 AI 全程带你做</h3>
   <div class="prompt"><div class="prompt-label">⌘ 提示词</div>
-帮我搭 GitHub Actions 远程触发链路：
+我想做一个"团队点一下刷新按钮，就能远程让服务器重新抓一次数据"的功能。帮我全程搭好：
 
-1. 写一个 .github/workflows/refresh.yml
-   - 触发：workflow_dispatch
-   - 在 self-hosted runner 上跑 update_data.py
-   - 用 GITHUB_TOKEN env 自动 push（绕开本地 git credential）
+1. 在 GitHub 上设置好"一键就能让服务器跑一次抓取"的自动流程。
 
-2. 写一个 Cloudflare Worker（cloudflare-worker.js）
-   - POST /dispatch → 触发 workflow
-   - GET /status → 返回最新 run 的状态
-   - PAT 从 env.GITHUB_PAT 读
+2. 做一个小的中转服务（用 Cloudflare 的免费服务，相当于一个安全的中间人）：
+   - 收到"刷新"请求 → 就去通知 GitHub 跑一次
+   - 也能查一下"这次跑完了没"
 
-3. 帮我用 wrangler CLI 部署 Worker：
-   - 我已经装好了 wrangler 并 wrangler login 过
-   - 给我一个 wrangler.toml 配置文件
-   - 帮我 wrangler deploy
+3. 帮我把这个中转服务部署上线（要用的工具我已经装好、也登录过了，你直接用命令帮我弄）。
 
-4. 教我去 GitHub 生成 fine-grained PAT（actions: Read and write）
-   - 拿到 PAT 后用 wrangler secret put GITHUB_PAT 存进 Worker（隐藏输入）
+4. 带我去 GitHub 生成一把"授权钥匙"（只给它够用的最小权限），再把这把钥匙安全地存进中转服务里。注意：这把钥匙不能写进网页代码、也不要贴给你，存的时候是隐藏输入的。
 
-5. 改前端的"刷新"按钮：
-   - 之前只是 reload 页面
-   - 改成调 Worker /dispatch 触发 workflow
-   - 轮询 /status 直到完成，再 reload</div>
+5. 把网页上那个"刷新"按钮改一下：
+   - 以前点了只是刷新一下页面
+   - 改成点了就触发上面这套流程，然后等它跑完，再自动刷出新数据。</div>
 
   <div class="card warn">
     <div class="label">坑预警</div>
-    Cloudflare 新版 UI 默认建"Workers + Static Assets"型 Worker — <b>这种不能加 Secret</b>。<b>用 wrangler 命令行部署</b>，是纯 Worker 不会有这问题。
+    在 Cloudflare 网页上手动建这个中转服务，有一种类型<b>存不了"授权钥匙"</b>，容易踩坑。<b>让 AI 用命令行帮你部署</b>就不会有这个问题——记得提醒 AI 走命令行这条路。
   </div>
 
   <div class="check">
     <div class="label">验证</div>
     <ol>
-      <li>命令行 <code>curl -X POST https://&lt;你的 Worker URL&gt;/dispatch</code> → 返回 HTTP 200 "OK"</li>
-      <li>GitHub Actions 页面看到一个新 run 在跑</li>
-      <li>约 2-3 分钟后 Pages 拿到新数据</li>
-      <li>团队在网页点"刷新"按钮 → 走相同链路</li>
+      <li>让 AI 帮你测一下那个中转服务，能正常收到"刷新"请求并回应成功</li>
+      <li>去 GitHub 项目里看，有一个新任务正在跑</li>
+      <li>约 2-3 分钟后，网页上能看到新数据</li>
+      <li>最后团队在网页上点"刷新"按钮 → 走的是同一条链路，能成功</li>
     </ol>
   </div>
 </section>
@@ -642,12 +624,12 @@ VPS 上加一个 cron entry，每 30 分钟触发一次 workflow。
   <h3>9.1 发给团队的话</h3>
   <div class="card success">
     <div class="label">团队使用说明（直接抄给同事）</div>
-    <p>看板地址：<code>https://&lt;你的 Pages URL&gt;</code></p>
+    <p>看板地址：[贴上 AI 给你的看板网址]</p>
     <ol>
       <li>每天打开看就行</li>
       <li>右上角"刷新"按钮 = 强制拉一次最新数据（2-3 分钟）</li>
       <li>看 header 时间戳：🟢绿 = 新；🟡黄 = 4 小时+；🔴红 = 1 天+</li>
-      <li>看到红色或刷新没反应 → 找 eight</li>
+      <li>看到红色或刷新没反应 → 找你们自己的开发人员</li>
     </ol>
   </div>
 
@@ -655,7 +637,7 @@ VPS 上加一个 cron entry，每 30 分钟触发一次 workflow。
   <div class="card success">
     <div class="label">✅ 永远可用</div>
     <ul>
-      <li>你 Mac 关机 = OK，VPS 顶着</li>
+      <li>你 Mac 关机 = OK，服务器顶着</li>
       <li>你出差不带电脑 = OK</li>
       <li>团队晚上点刷新 = OK</li>
     </ul>
@@ -663,9 +645,9 @@ VPS 上加一个 cron entry，每 30 分钟触发一次 workflow。
 
   <h3>9.3 还是会有问题的情况</h3>
   <ul>
-    <li>admin 后台改密码 / 重置 2FA → 你要更新 VPS 上的 .env</li>
-    <li>VPS 本身挂了 → Hostinger 面板能看到，重启或换机器</li>
-    <li>admin1866 长期挂掉 → 不归你管</li>
+    <li>后台改了密码 / 重置了那个验证码 → 你要去服务器上把保存的账号密码更新一下</li>
+    <li>服务器本身挂了 → 在服务商面板里能看到，重启或换一台</li>
+    <li>你们公司后台长期挂掉 → 那不归你管</li>
   </ul>
 </section>
 
@@ -683,19 +665,18 @@ VPS 上加一个 cron entry，每 30 分钟触发一次 workflow。
 
   <h3>10.2 必须人工把关的环节</h3>
   <ul>
-    <li><b>密码 / PAT / TOTP 密钥不要发到 AI 对话</b> — 让 AI 用 <code>wrangler secret put</code> 或 <code>read -s</code> 之类交互输入</li>
-    <li><b>git push 前看 commit 内容</b>，确认没把 .env 推上去</li>
-    <li><b>GitHub Pages 公开 / 私有</b> 选择前跟需求方对齐</li>
+    <li><b>账号密码、授权钥匙、那个会变的验证码的密钥，都不要发到 AI 对话框里</b> — 让 AI 用"隐藏输入"的方式，让你自己输进去</li>
+    <li><b>每次上传之前，瞄一眼要传的内容</b>，确认没把存密码的那个文件也一起传上去</li>
   </ul>
 
   <h3>10.3 Pro 版额外的运维操作</h3>
   <table>
     <thead><tr><th>场景</th><th>怎么处理</th></tr></thead>
     <tbody>
-      <tr><td>VPS 挂了 / 升级系统</td><td>Hostinger 面板重启；重大变化让 AI 重跑一次安装脚本</td></tr>
-      <tr><td>admin 密码变了</td><td>SSH 到 VPS，<code>nano /opt/commercial-dashboard/.env</code> 改对应行</td></tr>
-      <tr><td>PAT 过期了</td><td>新建 PAT；<code>wrangler secret put GITHUB_PAT</code> 替换</td></tr>
-      <tr><td>团队反馈刷新没反应</td><td>看 GitHub Actions 页面有没有 run；runner 是否在线</td></tr>
+      <tr><td>服务器挂了 / 要升级系统</td><td>在服务商面板里重启；变化大的话，让 AI 重跑一次安装脚本</td></tr>
+      <tr><td>后台密码变了</td><td>让 AI 带你登上服务器，把保存账号密码的那个文件里对应的改掉</td></tr>
+      <tr><td>授权钥匙过期了</td><td>重新生成一把；让 AI 帮你把中转服务里的旧钥匙换成新的</td></tr>
+      <tr><td>团队反馈刷新没反应</td><td>去 GitHub 项目里看任务有没有在跑；那台服务器是否在线</td></tr>
     </tbody>
   </table>
 
